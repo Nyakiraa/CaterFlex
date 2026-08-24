@@ -1,0 +1,263 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@font-face {
+  font-family: 'Wildeast';
+  src: url('/fonts/wildeast.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/LEMONMILK-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/LEMONMILK-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/LEMONMILK-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/LEMONMILK-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-heading {
+  font-family: 'LemonMilk', sans-serif;
+}
+
+
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-surface-muted-foreground: var(--surface-muted-foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-card-muted-foreground: var(--card-muted-foreground);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-brand: var(--brand);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: light;
+  /* Landing / legacy shell */
+  --background: #7B2525;
+  --foreground: #FFFFFF;
+  --brand: #7B2525;
+  /* Cream dashboard surface */
+  --surface: #EEE0CC;
+  --surface-foreground: #3D3630;
+  --surface-muted-foreground: #6B635B;
+  /* Light cards on cream (dark text) */
+  --card: #FAF6F0;
+  --card-foreground: #3D3630;
+  --card-muted-foreground: #6B635B;
+  --popover: #FAF6F0;
+  --popover-foreground: #3D3630;
+  --primary: #BA6A4C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #607456;
+  --secondary-foreground: #FFFFFF;
+  --muted: #E8DFD0;
+  --muted-foreground: #6B635B;
+  --accent: #EEE0CC;
+  --accent-foreground: #3D3630;
+  --destructive: #DC2626;
+  --border: #2D2D2D;
+  --input: #FAF6F0;
+  --ring: #2D2D2D;
+  --chart-1: #BA6A4C;
+  --chart-2: #607456;
+  --chart-3: #EEE0CC;
+  --chart-4: #8B5A42;
+  --chart-5: #A64545;
+  --radius: 0.625rem;
+  --sidebar: #6B1F1F;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #BA6A4C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEE0CC;
+  --sidebar-accent-foreground: #7B2525;
+  --sidebar-border: #1A1A1A;
+  --sidebar-ring: #BA6A4C;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #7B2525;
+  --foreground: #FFFFFF;
+  --brand: #7B2525;
+  --surface: #EEE0CC;
+  --surface-foreground: #3D3630;
+  --surface-muted-foreground: #6B635B;
+  --card: #FAF6F0;
+  --card-foreground: #3D3630;
+  --card-muted-foreground: #6B635B;
+  --popover: #FAF6F0;
+  --popover-foreground: #3D3630;
+  --primary: #BA6A4C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #607456;
+  --secondary-foreground: #FFFFFF;
+  --muted: #E8DFD0;
+  --muted-foreground: #6B635B;
+  --accent: #EEE0CC;
+  --accent-foreground: #3D3630;
+  --destructive: #DC2626;
+  --border: #2D2D2D;
+  --input: #FAF6F0;
+  --ring: #2D2D2D;
+  --chart-1: #BA6A4C;
+  --chart-2: #607456;
+  --chart-3: #EEE0CC;
+  --chart-4: #8B5A42;
+  --chart-5: #A64545;
+  --sidebar: #6B1F1F;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #BA6A4C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEE0CC;
+  --sidebar-accent-foreground: #7B2525;
+  --sidebar-border: #1A1A1A;
+  --sidebar-ring: #BA6A4C;
+}
+
+/* Always use light mode - no dark mode overrides */
+
+@layer utilities {
+  .text-on-dark {
+    color: #ffffff;
+  }
+  .text-on-dark-muted {
+    color: rgb(255 255 255 / 0.85);
+  }
+  .text-on-light {
+    color: var(--surface-foreground);
+  }
+  .text-on-light-muted {
+    color: var(--surface-muted-foreground);
+  }
+}
+
+@layer base {
+  /* Light cream dashboard surface → dark text */
+  .bg-surface {
+    color: var(--surface-foreground);
+    --foreground: var(--surface-foreground);
+    --muted-foreground: var(--surface-muted-foreground);
+  }
+
+  /* Light cards → dark text */
+  .bg-card {
+    color: var(--card-foreground);
+    --foreground: var(--card-foreground);
+    --muted-foreground: var(--card-muted-foreground);
+  }
+
+  /* Light muted panels */
+  :is(.bg-muted, [class*='bg-muted/']) {
+    color: var(--surface-foreground);
+    --foreground: var(--surface-foreground);
+    --muted-foreground: var(--surface-muted-foreground);
+  }
+
+  /* Dark or saturated colored panels → light text */
+  .tone-dark {
+    color: #ffffff;
+    --foreground: #ffffff;
+    --muted-foreground: rgb(255 255 255 / 0.82);
+    --card-foreground: #ffffff;
+    --card-muted-foreground: rgb(255 255 255 / 0.82);
+  }
+
+  /* Light tinted panels (e.g. tan stat card) → dark text */
+  .tone-light {
+    color: var(--surface-foreground);
+    --foreground: var(--surface-foreground);
+    --muted-foreground: var(--surface-muted-foreground);
+    --card-foreground: var(--surface-foreground);
+    --card-muted-foreground: var(--surface-muted-foreground);
+  }
+
+  .bg-card :is(input, select, textarea) {
+    color: var(--card-foreground);
+    background-color: var(--input);
+  }
+
+  .bg-surface :is(input, select, textarea) {
+    color: var(--surface-foreground);
+    background-color: var(--input);
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* Hide scrollbar while keeping functionality */
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
