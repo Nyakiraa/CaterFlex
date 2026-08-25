@@ -79,7 +79,7 @@ export default function Page() {
               onClick={handleOwnerClick}
               className="w-full bg-primary text-white font-medium mt-auto hover:bg-brand"
             >
-              Continue as Owner
+              Login as Owner
             </Button>
           </div>
 
@@ -122,7 +122,7 @@ export default function Page() {
               onClick={handleCustomerClick}
               className="w-full bg-secondary text-white font-medium mt-auto hover:bg-brand"
             >
-              Continue as Customer
+              Login as Customer
             </Button>
           </div>
         </div>
