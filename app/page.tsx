@@ -1,6 +1,5 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppState } from '@/lib/state';
 import { Button } from '@/components/ui/button';
@@ -9,23 +8,17 @@ import { ChefHat, UtensilsCrossed } from 'lucide-react';
 
 export default function Page() {
   const router = useRouter();
-  const setCurrentRole = useAppState((state) => state.setCurrentRole);
-  const [role, setRole] = useState<'owner' | 'customer'>('customer');
-  const [error, setError] = useState('');
+  const { setCurrentRole } = useAppState();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const email = String(form.get('email') || '').trim();
-    const password = String(form.get('password') || '');
-    if (!email || !password) {
-      setError('Enter your email and password to continue.');
-      return;
-    }
-    setError('');
-    setCurrentRole(role);
-    router.push(role === 'owner' ? '/owner/dashboard' : '/customer/inquiry');
-  }
+  const handleOwnerClick = () => {
+    setCurrentRole('owner');
+    router.push('/login?role=owner');
+  };
+
+  const handleCustomerClick = () => {
+    setCurrentRole('customer');
+    router.push('/login?role=customer');
+  };
 
   return (
     <main className="min-h-screen relative overflow-hidden flex flex-col items-center px-4 py-0" style={{backgroundImage: 'url(/background.webp)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
@@ -46,25 +39,7 @@ export default function Page() {
           </p>
         </div>
 
-        <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg">
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg border border-border bg-background p-1">
-            <button type="button" onClick={() => setRole('owner')} className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${role === 'owner' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Owner</button>
-            <button type="button" onClick={() => setRole('customer')} className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${role === 'customer' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Customer</button>
-          </div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-2 text-sm font-medium" htmlFor="landing-email">Email address
-              <input id="landing-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" className="h-11 rounded-md border border-input bg-background px-3 font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
-            </label>
-            <label className="flex flex-col gap-2 text-sm font-medium" htmlFor="landing-password">Password
-              <input id="landing-password" name="password" type="password" autoComplete="current-password" placeholder="Enter your password" className="h-11 rounded-md border border-input bg-background px-3 font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
-            </label>
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="h-11 w-full">Login as {role === 'owner' ? 'Owner' : 'Customer'}</Button>
-          </form>
-        </div>
-
-        {/* Role details */}
-        <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <div className="grid md:grid-cols-2 gap-4">
           {/* Owner Card */}
           <div className="bg-card rounded-2xl p-6 border border-border shadow-sm hover:border-primary/50 transition-all hover:shadow-lg flex flex-col min-h-[405px]">
             <div className="flex items-center gap-3 mb-4">
@@ -100,6 +75,12 @@ export default function Page() {
               </li>
             </ul>
 
+            <Button
+              onClick={handleOwnerClick}
+              className="w-full bg-primary text-white font-medium mt-auto hover:bg-brand"
+            >
+              Login as Owner
+            </Button>
           </div>
 
           {/* Customer Card */}
@@ -137,6 +118,12 @@ export default function Page() {
               </li>
             </ul>
 
+            <Button
+              onClick={handleCustomerClick}
+              className="w-full bg-secondary text-white font-medium mt-auto hover:bg-brand"
+            >
+              Login as Customer
+            </Button>
           </div>
         </div>
       </div>
