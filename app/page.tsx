@@ -12,12 +12,12 @@ export default function Page() {
 
   const handleOwnerClick = () => {
     setCurrentRole('owner');
-    router.push('/owner/dashboard');
+    router.push('/login?role=owner');
   };
 
   const handleCustomerClick = () => {
     setCurrentRole('customer');
-    router.push('/customer/inquiry');
+    router.push('/login?role=customer');
   };
 
   return (
