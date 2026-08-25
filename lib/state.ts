@@ -203,6 +203,10 @@ export const useAppState = create<AppState>((set, get) => ({
 
   deleteMenuItem: (itemId) =>
     set((state) => {
+      const isReferenced = state.bookings.some((booking) =>
+        booking.selectedMenuItemIds.includes(itemId)
+      );
+      if (isReferenced) return state;
       const next = {
         ...state,
         menuItems: state.menuItems.filter((m) => m.id !== itemId),

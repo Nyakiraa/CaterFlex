@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Home,
   Settings,
+  Activity,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -31,6 +32,7 @@ export function Sidebar() {
   const customerLinks = [
     { href: '/customer/inquiry', label: 'New Booking', icon: Home },
     { href: '/customer/browse', label: 'Browse Menu', icon: UtensilsCrossed },
+    { href: '/customer/status', label: 'My Bookings', icon: Activity },
   ];
 
   const links = currentRole === 'owner' ? ownerLinks : customerLinks;
