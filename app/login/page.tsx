@@ -2,7 +2,6 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChefHat, ArrowLeft, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppState } from '@/lib/state';
 import type { UserRole } from '@/lib/types';
@@ -12,11 +11,9 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const initialRole = searchParams.get('role') === 'owner' ? 'owner' : 'customer';
   const [role, setRole] = useState<UserRole>(initialRole);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const setCurrentRole = useAppState((state) => state.setCurrentRole);
-
-  const destination = role === 'owner' ? '/owner/dashboard' : '/customer/inquiry';
-  const title = role === 'owner' ? 'Welcome back, owner' : 'Welcome back, customer';
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,42 +26,47 @@ function LoginForm() {
     }
     setError('');
     setCurrentRole(role);
-    router.push(destination);
+    router.push(role === 'owner' ? '/owner/dashboard' : '/customer/inquiry');
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center">
-        <button type="button" onClick={() => router.push('/')} className="mb-8 flex items-center gap-2 self-start text-sm text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft aria-hidden="true" className="size-4" /> Back to role selection
-        </button>
-        <div className="mb-8 text-center">
-          <img src="/logo.png" alt="CaterFlex" className="mx-auto mb-4 size-20 object-contain" />
-          <p className="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-primary">CaterFlex access</p>
-          <h1 className="text-balance text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="mt-3 text-pretty text-sm leading-6 text-muted-foreground">Sign in to continue managing catering experiences with CaterFlex.</p>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cover bg-center px-6 py-8" style={{ backgroundImage: "url('/background.webp')" }}>
+      <div className="absolute inset-0 bg-brand/70" aria-hidden="true" />
+      <div className="relative w-full max-w-md rounded-[2rem] border border-border/70 bg-card p-7 text-card-foreground shadow-2xl sm:p-10">
+        <div className="flex justify-center">
+          <img src="/logo.png" alt="CaterFlex logo" className="size-24 object-contain" />
         </div>
-
-        <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg border border-border bg-card p-1">
-          <button type="button" onClick={() => setRole('owner')} className={`flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${role === 'owner' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            <ChefHat aria-hidden="true" className="size-4" /> Owner
-          </button>
-          <button type="button" onClick={() => setRole('customer')} className={`flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${role === 'customer' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-            <UtensilsCrossed aria-hidden="true" className="size-4" /> Customer
-          </button>
+        <div className="mt-5 text-center">
+          <p className="font-mono text-xs uppercase tracking-[0.25em] text-primary">Welcome back</p>
+          <h1 className="mt-3 text-balance text-4xl font-bold leading-tight">Log in to CaterFlex</h1>
+          <p className="mt-3 text-pretty text-sm leading-6 text-muted-foreground">Plan your next meal, browse menus, and send a booking request.</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-xl border border-border bg-card p-6 shadow-sm">
-          <label className="flex flex-col gap-2 text-sm font-medium" htmlFor="email">Email address
-            <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" className="h-11 rounded-md border border-input bg-background px-3 font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
+        <div className="mt-7 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1" role="tablist" aria-label="Account type">
+          {(['customer', 'owner'] as const).map((accountRole) => (
+            <button key={accountRole} type="button" role="tab" aria-selected={role === accountRole} onClick={() => setRole(accountRole)} className={`rounded-lg px-3 py-2.5 text-sm font-semibold capitalize transition-colors ${role === accountRole ? 'bg-card text-card-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              {accountRole}
+            </button>
+          ))}
+        </div>
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+          <label htmlFor="email" className="flex flex-col gap-2 text-sm font-semibold">Email address
+            <input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className="h-12 w-full rounded-xl border border-border bg-background px-4 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-medium" htmlFor="password">Password
-            <input id="password" name="password" type="password" autoComplete="current-password" placeholder="Enter your password" className="h-11 rounded-md border border-input bg-background px-3 font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
+          <label htmlFor="password" className="flex flex-col gap-2 text-sm font-semibold">Password
+            <span className="relative">
+              <input id="password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" placeholder="Enter your password" className="h-12 w-full rounded-xl border border-border bg-background px-4 pr-20 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline">{showPassword ? 'Hide' : 'Show'}</button>
+            </span>
           </label>
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" /> Remember me</label>
+            <button type="button" className="font-semibold text-primary hover:underline">Forgot password?</button>
+          </div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="h-11 w-full">Sign in as {role === 'owner' ? 'Owner' : 'Customer'}</Button>
-          <p className="text-center text-xs leading-5 text-muted-foreground">Prototype access: any valid email and password will continue to the selected workspace.</p>
+          <Button type="submit" className="h-12 w-full">Log in as {role}</Button>
         </form>
+        <p className="mt-7 text-center text-sm text-muted-foreground">New to CaterFlex? <button type="button" onClick={() => router.push('/')} className="font-semibold text-primary hover:underline">Create an account</button></p>
+        <button type="button" onClick={() => router.push('/')} className="mt-5 block w-full text-center text-sm text-muted-foreground hover:text-foreground">Back to landing page</button>
       </div>
     </main>
   );
