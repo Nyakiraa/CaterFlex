@@ -48,7 +48,6 @@ function LoginForm() {
         <section className="w-full max-w-lg rounded-3xl border border-border/70 bg-card p-6 text-card-foreground shadow-2xl sm:p-8" aria-labelledby="login-heading">
           <div className="flex items-start justify-between gap-4">
             <div><p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">Welcome back</p><h2 id="login-heading" className="mt-3 text-4xl font-semibold uppercase tracking-tight">Sign in</h2></div>
-            <div className="rounded-2xl bg-muted px-4 py-3 font-mono text-lg font-semibold tracking-wider text-primary" aria-hidden="true">CF</div>
           </div>
           <div className="mt-6 grid grid-cols-2 rounded-xl bg-muted p-1" role="tablist" aria-label="Account type">
             {(['owner', 'customer'] as const).map((accountRole) => (<button key={accountRole} type="button" role="tab" aria-selected={role === accountRole} onClick={() => setRole(accountRole)} className={`rounded-lg px-3 py-3 text-sm font-semibold capitalize transition-colors ${role === accountRole ? 'bg-card text-card-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{accountRole}</button>))}
@@ -60,7 +59,7 @@ function LoginForm() {
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="h-11 w-full text-base">Continue as {role}</Button>
           </form>
-          <p className="mt-8 text-center text-sm text-muted-foreground">New to CaterFlex? <button type="button" onClick={() => router.push('/')} className="font-semibold text-primary hover:underline">Create an account</button></p>
+          <p className="mt-8 text-center text-sm text-muted-foreground">New to CaterFlex? <button type="button" onClick={() => router.push('/signup')} className="font-semibold text-primary hover:underline">Create an account</button></p>
         </section>
       </div>
     </main>
