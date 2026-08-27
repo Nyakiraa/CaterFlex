@@ -30,16 +30,15 @@ function LoginForm() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-cover bg-center px-6 py-6 text-primary-foreground" style={{ backgroundImage: "url('/background.webp')" }}>
+    <main className="relative h-screen max-h-screen overflow-hidden bg-cover bg-center px-6 py-4 text-primary-foreground" style={{ backgroundImage: "url('/background.webp')" }}>
       <div className="absolute inset-0 bg-brand/80" aria-hidden="true" />
       <header className="relative z-10 flex items-center justify-between">
         <button type="button" onClick={() => router.push('/')} className="flex items-center gap-3" aria-label="Back to CaterFlex home">
-          <img src="/logo.png" alt="CaterFlex logo" className="size-12 object-contain" />
-          <span className="font-mono text-lg tracking-[0.2em] text-primary-foreground">CATERFLEX</span>
+          <img src="/logo.png" alt="CaterFlex logo" className="size-20 object-contain" />
         </button>
         <span className="hidden font-mono text-xs uppercase tracking-[0.35em] text-primary-foreground/80 sm:block">Catering, refined</span>
       </header>
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl items-center justify-between gap-12 py-12">
+      <div className="relative z-10 mx-auto flex h-[calc(100vh-6rem)] max-w-7xl items-center justify-center gap-16 py-4">
         <section className="hidden max-w-2xl lg:block">
           <p className="font-mono text-sm uppercase tracking-[0.35em] text-primary-foreground/80">The calm behind every great event</p>
           <h1 className="mt-8 max-w-xl text-balance text-7xl font-bold uppercase leading-[0.9] tracking-tight">Your table is ready.</h1>
@@ -55,8 +54,8 @@ function LoginForm() {
             {(['owner', 'customer'] as const).map((accountRole) => (<button key={accountRole} type="button" role="tab" aria-selected={role === accountRole} onClick={() => setRole(accountRole)} className={`rounded-lg px-3 py-3 text-sm font-semibold capitalize transition-colors ${role === accountRole ? 'bg-card text-card-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{accountRole}</button>))}
           </div>
           <form onSubmit={handleSubmit} className="mt-9 flex flex-col gap-6">
-            <label htmlFor="email" className="flex flex-col gap-2 text-sm font-semibold">Email address<input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className="h-14 w-full rounded-xl border border-border bg-background px-4 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
-            <label htmlFor="password" className="flex flex-col gap-2 text-sm font-semibold">Password<span className="relative"><input id="password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" placeholder="Enter your password" className="h-14 w-full rounded-xl border border-border bg-background px-4 pr-20 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /><button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline">{showPassword ? 'Hide' : 'Show'}</button></span></label>
+            <label htmlFor="email" className="flex flex-col gap-2 text-sm font-semibold">Email address<input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className="h-14 w-full rounded-xl border border-border bg-card px-4 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
+            <label htmlFor="password" className="flex flex-col gap-2 text-sm font-semibold">Password<span className="relative"><input id="password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" placeholder="Enter your password" className="h-14 w-full rounded-xl border border-border bg-card px-4 pr-20 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /><button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline">{showPassword ? 'Hide' : 'Show'}</button></span></label>
             <div className="flex items-center justify-between text-sm"><label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" /> Remember me</label><button type="button" className="font-semibold text-primary hover:underline">Forgot password?</button></div>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="h-14 w-full text-base">Continue as {role}</Button>
