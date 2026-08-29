@@ -9,6 +9,7 @@ export default function PrepSchedulePage() {
   const { bookings, menuItems } = useAppState();
 
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
+  const mealPrepBookings = confirmedBookings.filter((b) => b.orderType === 'meal_prep');
 
   const prepItems = confirmedBookings.flatMap((booking) =>
     booking.selectedMenuItemIds.map((itemId) => {
@@ -24,6 +25,7 @@ export default function PrepSchedulePage() {
         prepStartDate,
         prepDays: item?.prepTimeDays || 0,
         customerName: booking.customerName,
+        orderType: booking.orderType,
       };
     })
   );
@@ -37,7 +39,7 @@ export default function PrepSchedulePage() {
         <div>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">Prep Schedule</h1>
           <p className="text-surface-muted-foreground mt-2">
-            Upcoming items to prepare for confirmed bookings
+            Upcoming items to prepare for confirmed bookings and meal-prep orders ({mealPrepBookings.length} recurring)
           </p>
         </div>
 
@@ -78,7 +80,7 @@ export default function PrepSchedulePage() {
                             {item.itemName}
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            For {item.customerName}
+                            For {item.customerName} · {item.orderType === 'meal_prep' ? 'Meal prep order' : 'Catering event'}
                           </p>
                         </div>
                         <div className="text-right">
