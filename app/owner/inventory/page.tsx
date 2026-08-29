@@ -9,12 +9,13 @@ import {
 } from '@/lib/rules/macroFlex';
 import { Card } from '@/components/ui/card';
 import { useMemo, useState } from 'react';
-import { AlertCircle, Lightbulb } from 'lucide-react';
+import { AlertCircle, Lightbulb, PackageCheck, UtensilsCrossed } from 'lucide-react';
 
 export default function InventoryPage() {
   const { ingredients, menuItems, updateIngredientStock } = useAppState();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'low' | 'available' | 'limited' | 'insufficient'>('all');
 
   const overPurchased = useMemo(
     () => getOverPurchasedIngredients(ingredients),
@@ -32,6 +33,12 @@ export default function InventoryPage() {
       })),
     [menuItems, ingredients]
   );
+  const lowIngredients = ingredients.filter((ingredient) => ingredient.currentStock / ingredient.maxCapacity < 0.25);
+  const filteredIngredients = activeCategory === 'low' ? lowIngredients : activeCategory === 'all' ? ingredients : ingredients.filter((ingredient) => {
+    const percentage = ingredient.currentStock / ingredient.maxCapacity;
+    return activeCategory === 'available' ? percentage >= 0.5 : activeCategory === 'limited' ? percentage >= 0.25 && percentage < 0.5 : percentage < 0.25;
+  });
+  const filteredDishes = activeCategory === 'all' || activeCategory === 'low' ? dishChecks : dishChecks.filter(({ check }) => check.status === activeCategory);
 
   const handleEdit = (id: string, current: number) => {
     setEditingId(id);
@@ -48,11 +55,26 @@ export default function InventoryPage() {
       <div className="space-y-8">
         <div>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">
-            Inventory (MacroFlex)
+            Inventory & dish availability
           </h1>
           <p className="text-surface-muted-foreground mt-2">
-            Stock levels, per-serving availability, over-purchasing, and tira-tira suggestions.
+            Track dish availability, ingredient stock, and low inventory in one place.
           </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5" role="tablist" aria-label="Inventory categories">
+          {[
+            ['all', 'All inventory', ingredients.length],
+            ['available', 'Available', dishChecks.filter(({ check }) => check.status === 'available').length],
+            ['limited', 'Limited', dishChecks.filter(({ check }) => check.status === 'limited').length],
+            ['insufficient', 'Unavailable', dishChecks.filter(({ check }) => check.status === 'insufficient').length],
+            ['low', 'What\'s low', lowIngredients.length],
+          ].map(([value, label, count]) => (
+            <button key={value} type="button" role="tab" aria-selected={activeCategory === value} onClick={() => setActiveCategory(value as typeof activeCategory)} className={`rounded-lg border p-3 text-left transition-colors ${activeCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
+              <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span>{value === 'low' ? <AlertCircle className="size-4 text-destructive" /> : value === 'all' ? <PackageCheck className="size-4 text-primary" /> : <UtensilsCrossed className="size-4 text-primary" />}</span>
+              <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
+            </button>
+          ))}
         </div>
 
         {overPurchased.length > 0 && (
@@ -105,7 +127,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {ingredients.map((ingredient) => {
+                {filteredIngredients.map((ingredient) => {
                   const percentage =
                     (ingredient.currentStock / ingredient.maxCapacity) * 100;
                   const isOver = ingredient.currentStock > ingredient.maxCapacity;
@@ -197,7 +219,7 @@ export default function InventoryPage() {
             Dish availability (per serving)
           </h2>
           <div className="space-y-3">
-            {dishChecks.map(({ dish, check }) => (
+            {filteredDishes.map(({ dish, check }) => (
               <div
                 key={dish.id}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-muted/50 rounded-lg"
