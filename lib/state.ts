@@ -127,7 +127,7 @@ export const useAppState = create<AppState>((set, get) => ({
 
   createBooking: (booking) => {
     const state = get();
-    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings);
+    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     const bookings = [...state.bookings, validated];
     const next = { ...state, bookings };
     const derived = refreshDerivedState(next);
@@ -139,7 +139,7 @@ export const useAppState = create<AppState>((set, get) => ({
     const bookings = state.bookings.map((b) => {
       if (b.id !== bookingId) return b;
       const merged = { ...b, ...updates };
-      return applyBookingValidation(merged, state.operatorSettings, state.bookings);
+      return applyBookingValidation(merged, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     });
     const next = { ...state, bookings };
     const derived = refreshDerivedState(next);
@@ -151,7 +151,7 @@ export const useAppState = create<AppState>((set, get) => ({
     const booking = state.bookings.find((b) => b.id === bookingId);
     if (!booking || booking.status !== 'pending') return false;
 
-    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings);
+    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     if (!validated.validationPassed) {
       const bookings = state.bookings.map((b) =>
         b.id === bookingId ? validated : b
