@@ -47,7 +47,7 @@ export default function BrowsePage() {
       specialRequests: String(customerBookingDraft.specialRequests ?? ''),
       selectedMenuItemIds,
       dietaryRestrictions: customerDietaryRestrictions,
-      eventProfileId: selectedEventProfileId,
+      eventProfileId: String(customerBookingDraft.eventProfileId ?? 'corporate-buffet'),
       status: 'pending' as const,
       totalCost,
       paymentsReceived: 0,
