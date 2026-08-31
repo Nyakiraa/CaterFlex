@@ -68,14 +68,16 @@ export default function InventoryPage() {
         </div>
 
         {/* Tab Selector */}
-        <div className="flex gap-2 border-b border-border">
-          <button type="button" onClick={() => setActiveTab('dishes')} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'dishes' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>Dishes by Type</button>
-          <button type="button" onClick={() => setActiveTab('ingredients')} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'ingredients' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>Ingredients</button>
+        <div className="border-b border-border">
+          <div className="flex gap-8">
+            <button type="button" onClick={() => setActiveTab('dishes')} className={`py-4 text-sm font-medium transition-colors ${activeTab === 'dishes' ? 'border-b-2 border-primary text-card-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Dishes by Type</button>
+            <button type="button" onClick={() => setActiveTab('ingredients')} className={`py-4 text-sm font-medium transition-colors ${activeTab === 'ingredients' ? 'border-b-2 border-primary text-card-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Ingredients</button>
+          </div>
         </div>
 
         {/* Dish Categories */}
         {activeTab === 'dishes' && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="mt-6 flex flex-wrap gap-4">
             {[
               ['all', 'All Dishes', dishChecks.length],
               ['mains', 'Mains', dishChecks.filter(({ dish }) => dish.category === 'mains').length],
@@ -83,9 +85,12 @@ export default function InventoryPage() {
               ['sides', 'Sides', dishChecks.filter(({ dish }) => dish.category === 'sides').length],
               ['desserts', 'Desserts', dishChecks.filter(({ dish }) => dish.category === 'desserts').length],
             ].map(([value, label, count]) => (
-              <button key={value} type="button" onClick={() => setDishCategory(value as typeof dishCategory)} className={`rounded-lg border p-3 text-left transition-colors ${dishCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
-                <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span><UtensilsCrossed className="size-4 text-primary" /></span>
-                <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
+              <button key={value} type="button" onClick={() => setDishCategory(value as typeof dishCategory)} className={`flex-1 min-w-48 rounded-2xl border-2 p-5 text-left transition-all ${dishCategory === value ? 'border-primary bg-primary/5' : 'border-border bg-muted/20 hover:bg-muted/40'}`}>
+                <div className="flex items-start justify-between">
+                  <span className="text-sm font-medium text-card-foreground">{label}</span>
+                  <UtensilsCrossed className="size-5 text-primary" />
+                </div>
+                <span className="mt-3 block text-4xl font-bold text-card-foreground">{count}</span>
               </button>
             ))}
           </div>
@@ -93,7 +98,7 @@ export default function InventoryPage() {
 
         {/* Ingredient Categories */}
         {activeTab === 'ingredients' && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="mt-6 flex flex-wrap gap-4">
             {[
               ['all', 'All Stock', ingredients.length],
               ['low', 'What\'s Low', lowIngredients.length],
@@ -101,9 +106,12 @@ export default function InventoryPage() {
               ['dairy', 'Dairy', ingredients.filter((i) => i.category === 'dairy').length],
               ['baking', 'Baking', ingredients.filter((i) => i.category === 'baking').length],
             ].map(([value, label, count]) => (
-              <button key={value} type="button" onClick={() => setIngredientCategory(value as typeof ingredientCategory)} className={`rounded-lg border p-3 text-left transition-colors ${ingredientCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
-                <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span>{value === 'low' ? <AlertCircle className="size-4 text-destructive" /> : <PackageCheck className="size-4 text-primary" />}</span>
-                <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
+              <button key={value} type="button" onClick={() => setIngredientCategory(value as typeof ingredientCategory)} className={`flex-1 min-w-48 rounded-2xl border-2 p-5 text-left transition-all ${ingredientCategory === value ? 'border-primary bg-primary/5' : 'border-border bg-muted/20 hover:bg-muted/40'}`}>
+                <div className="flex items-start justify-between">
+                  <span className="text-sm font-medium text-card-foreground">{label}</span>
+                  {value === 'low' ? <AlertCircle className="size-5 text-destructive" /> : <PackageCheck className="size-5 text-primary" />}
+                </div>
+                <span className="mt-3 block text-4xl font-bold text-card-foreground">{count}</span>
               </button>
             ))}
           </div>
