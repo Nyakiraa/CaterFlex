@@ -15,7 +15,9 @@ export default function InventoryPage() {
   const { ingredients, menuItems, updateIngredientStock } = useAppState();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'low' | 'available' | 'limited' | 'insufficient'>('all');
+  const [activeTab, setActiveTab] = useState<'dishes' | 'ingredients'>('dishes');
+  const [dishCategory, setDishCategory] = useState<'all' | 'mains' | 'appetizers' | 'sides' | 'desserts'>('all');
+  const [ingredientCategory, setIngredientCategory] = useState<'all' | 'low' | 'meats' | 'dairy' | 'baking' | 'produce' | 'pantry' | 'herbs_spices'>('all');
 
   const overPurchased = useMemo(
     () => getOverPurchasedIngredients(ingredients),
@@ -34,11 +36,14 @@ export default function InventoryPage() {
     [menuItems, ingredients]
   );
   const lowIngredients = ingredients.filter((ingredient) => ingredient.currentStock / ingredient.maxCapacity < 0.25);
-  const filteredIngredients = activeCategory === 'low' ? lowIngredients : activeCategory === 'all' ? ingredients : ingredients.filter((ingredient) => {
-    const percentage = ingredient.currentStock / ingredient.maxCapacity;
-    return activeCategory === 'available' ? percentage >= 0.5 : activeCategory === 'limited' ? percentage >= 0.25 && percentage < 0.5 : percentage < 0.25;
-  });
-  const filteredDishes = activeCategory === 'all' || activeCategory === 'low' ? dishChecks : dishChecks.filter(({ check }) => check.status === activeCategory);
+  const filteredIngredients = ingredientCategory === 'low' 
+    ? lowIngredients 
+    : ingredientCategory === 'all' 
+      ? ingredients 
+      : ingredients.filter((ing) => ing.category === ingredientCategory);
+  const filteredDishes = dishCategory === 'all' 
+    ? dishChecks 
+    : dishChecks.filter(({ dish }) => dish.category === dishCategory);
 
   const handleEdit = (id: string, current: number) => {
     setEditingId(id);
@@ -62,20 +67,47 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5" role="tablist" aria-label="Inventory categories">
-          {[
-            ['all', 'All inventory', ingredients.length],
-            ['available', 'Available', dishChecks.filter(({ check }) => check.status === 'available').length],
-            ['limited', 'Limited', dishChecks.filter(({ check }) => check.status === 'limited').length],
-            ['insufficient', 'Unavailable', dishChecks.filter(({ check }) => check.status === 'insufficient').length],
-            ['low', 'What\'s low', lowIngredients.length],
-          ].map(([value, label, count]) => (
-            <button key={value} type="button" role="tab" aria-selected={activeCategory === value} onClick={() => setActiveCategory(value as typeof activeCategory)} className={`rounded-lg border p-3 text-left transition-colors ${activeCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
-              <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span>{value === 'low' ? <AlertCircle className="size-4 text-destructive" /> : value === 'all' ? <PackageCheck className="size-4 text-primary" /> : <UtensilsCrossed className="size-4 text-primary" />}</span>
-              <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
-            </button>
-          ))}
+        {/* Tab Selector */}
+        <div className="flex gap-2 border-b border-border">
+          <button type="button" onClick={() => setActiveTab('dishes')} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'dishes' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>Dishes by Type</button>
+          <button type="button" onClick={() => setActiveTab('ingredients')} className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'ingredients' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>Ingredients</button>
         </div>
+
+        {/* Dish Categories */}
+        {activeTab === 'dishes' && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {[
+              ['all', 'All Dishes', dishChecks.length],
+              ['mains', 'Mains', dishChecks.filter(({ dish }) => dish.category === 'mains').length],
+              ['appetizers', 'Appetizers', dishChecks.filter(({ dish }) => dish.category === 'appetizers').length],
+              ['sides', 'Sides', dishChecks.filter(({ dish }) => dish.category === 'sides').length],
+              ['desserts', 'Desserts', dishChecks.filter(({ dish }) => dish.category === 'desserts').length],
+            ].map(([value, label, count]) => (
+              <button key={value} type="button" onClick={() => setDishCategory(value as typeof dishCategory)} className={`rounded-lg border p-3 text-left transition-colors ${dishCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
+                <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span><UtensilsCrossed className="size-4 text-primary" /></span>
+                <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Ingredient Categories */}
+        {activeTab === 'ingredients' && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {[
+              ['all', 'All Stock', ingredients.length],
+              ['low', 'What\'s Low', lowIngredients.length],
+              ['meats', 'Meats', ingredients.filter((i) => i.category === 'meats').length],
+              ['dairy', 'Dairy', ingredients.filter((i) => i.category === 'dairy').length],
+              ['baking', 'Baking', ingredients.filter((i) => i.category === 'baking').length],
+            ].map(([value, label, count]) => (
+              <button key={value} type="button" onClick={() => setIngredientCategory(value as typeof ingredientCategory)} className={`rounded-lg border p-3 text-left transition-colors ${ingredientCategory === value ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted'}`}>
+                <span className="flex items-center justify-between gap-2 text-sm font-medium text-card-foreground"><span>{label}</span>{value === 'low' ? <AlertCircle className="size-4 text-destructive" /> : <PackageCheck className="size-4 text-primary" />}</span>
+                <span className="mt-1 block text-2xl font-bold text-card-foreground">{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {overPurchased.length > 0 && (
           <Card className="p-6 border-yellow-300 bg-yellow-50/80">
