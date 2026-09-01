@@ -94,6 +94,7 @@ export interface Booking {
   guestCount: number;
   mealPrepFrequency?: MealPrepFrequency;
   fulfillmentMethod?: FulfillmentMethod;
+  mealPrepStatus?: 'active' | 'paused';
   specialRequests: string;
   status: BookingStatus;
   selectedMenuItemIds: string[];

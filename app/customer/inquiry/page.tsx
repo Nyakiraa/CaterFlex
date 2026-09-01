@@ -104,7 +104,7 @@ export default function InquiryPage() {
       });
     }
 
-    router.push('/customer/browse');
+    router.push(isMealPrep ? '/customer/meal-prep-preview' : '/customer/browse');
   };
 
   const inputClass =

@@ -449,6 +449,7 @@ export const mockBookings: Booking[] = [
     guestCount: 8,
     mealPrepFrequency: 'weekly',
     fulfillmentMethod: 'delivery',
+    mealPrepStatus: 'active',
     specialRequests: 'No dairy, high protein portions',
     status: 'confirmed',
     selectedMenuItemIds: ['menu-1', 'menu-4', 'menu-5'],
