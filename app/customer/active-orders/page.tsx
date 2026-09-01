@@ -1,6 +1,6 @@
 'use client';
 
-import { DashboardLayout } from '@/app/dashboard-layout';
+import { CustomerShell } from '@/app/customer/customer-shell';
 import { useAppState } from '@/lib/state';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ export default function ActiveOrdersPage() {
 
   if (activeMealPrepOrders.length === 0) {
     return (
-      <DashboardLayout>
+      <CustomerShell>
         <div className="space-y-8">
           <div>
             <h1 className="font-heading text-3xl font-bold text-surface-foreground">Active Orders</h1>
@@ -43,12 +43,12 @@ export default function ActiveOrdersPage() {
             <Button onClick={() => router.push('/customer/inquiry')}>Start a meal prep plan</Button>
           </Card>
         </div>
-      </DashboardLayout>
+      </CustomerShell>
     );
   }
 
   return (
-    <DashboardLayout>
+    <CustomerShell>
       <div className="space-y-8">
         <div>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">Active Orders</h1>
@@ -178,6 +178,6 @@ export default function ActiveOrdersPage() {
           })}
         </div>
       </div>
-    </DashboardLayout>
+    </CustomerShell>
   );
 }

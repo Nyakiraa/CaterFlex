@@ -1,6 +1,6 @@
 'use client';
 
-import { DashboardLayout } from '@/app/dashboard-layout';
+import { CustomerShell } from '@/app/customer/customer-shell';
 import { useAppState } from '@/lib/state';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -69,7 +69,7 @@ export default function BrowsePage() {
   };
 
   return (
-    <DashboardLayout>
+    <CustomerShell>
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Menu Items */}
         <div className="lg:col-span-2 space-y-6">
@@ -166,6 +166,6 @@ export default function BrowsePage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </CustomerShell>
   );
 }

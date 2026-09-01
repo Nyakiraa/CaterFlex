@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DashboardLayout } from '@/app/dashboard-layout';
+import { CustomerShell } from '@/app/customer/customer-shell';
 import { useAppState } from '@/lib/state';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export default function CustomerStatusPage() {
   };
 
   return (
-    <DashboardLayout>
+    <CustomerShell>
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <header>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">My bookings</h1>
@@ -78,6 +78,6 @@ export default function CustomerStatusPage() {
           );
         })}
       </div>
-    </DashboardLayout>
+    </CustomerShell>
   );
 }
