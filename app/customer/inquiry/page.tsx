@@ -258,27 +258,6 @@ export default function InquiryPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Macro Profile *
-                  </label>
-                  <select
-                    value={cateringForm.eventProfileId}
-                    onChange={(e) =>
-                      setCateringForm({
-                        ...cateringForm,
-                        eventProfileId: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {eventProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -437,27 +416,6 @@ export default function InquiryPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Macro Profile *
-                  </label>
-                  <select
-                    value={mealPrepForm.eventProfileId}
-                    onChange={(e) =>
-                      setMealPrepForm({
-                        ...mealPrepForm,
-                        eventProfileId: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {eventProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             )}
 
