@@ -20,6 +20,11 @@ export default function CustomerStatusPage() {
   const { bookings, menuItems, updateBooking } = useAppState();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [sentId, setSentId] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'bookings' | 'meal_prep'>('bookings');
+
+  const visibleBookings = bookings.filter((booking) =>
+    activeSection === 'meal_prep' ? booking.orderType === 'meal_prep' : booking.orderType !== 'meal_prep'
+  );
 
   const submitChangeRequest = (bookingId: string) => {
     const request = drafts[bookingId]?.trim();
@@ -40,9 +45,20 @@ export default function CustomerStatusPage() {
           <p className="mt-2 text-surface-muted-foreground">Track inquiries, confirmations, and request updates.</p>
         </header>
 
-        {bookings.length === 0 ? (
-          <Card><CardContent className="p-12 text-center text-muted-foreground">No bookings yet. Start a new inquiry to see it here.</CardContent></Card>
-        ) : bookings.map((booking) => {
+        <div className="border-b border-border">
+          <div className="flex gap-8" role="tablist" aria-label="My requests">
+            <button type="button" role="tab" aria-selected={activeSection === 'bookings'} onClick={() => setActiveSection('bookings')} className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${activeSection === 'bookings' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+              Booking requests <span className="ml-1">({bookings.filter((booking) => booking.orderType !== 'meal_prep').length})</span>
+            </button>
+            <button type="button" role="tab" aria-selected={activeSection === 'meal_prep'} onClick={() => setActiveSection('meal_prep')} className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${activeSection === 'meal_prep' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+              Meal prep requests <span className="ml-1">({bookings.filter((booking) => booking.orderType === 'meal_prep').length})</span>
+            </button>
+          </div>
+        </div>
+
+        {visibleBookings.length === 0 ? (
+          <Card><CardContent className="p-12 text-center text-muted-foreground">No {activeSection === 'meal_prep' ? 'meal prep' : 'booking'} requests yet. Start a new inquiry to see it here.</CardContent></Card>
+        ) : visibleBookings.map((booking) => {
           const status = statusCopy[booking.status];
           const StatusIcon = status.icon;
           return (
