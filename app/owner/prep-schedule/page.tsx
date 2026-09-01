@@ -80,7 +80,7 @@ export default function PrepSchedulePage() {
                             {item.itemName}
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            For {item.customerName} · {item.orderType === 'meal_prep' ? 'Meal prep order' : 'Catering event'}
+                            For {item.customerName} · {item.orderType === 'meal_prep' ? 'Meal prep' : 'Catering event'}
                           </p>
                         </div>
                         <div className="text-right">
