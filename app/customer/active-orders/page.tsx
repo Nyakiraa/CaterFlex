@@ -13,6 +13,8 @@ export default function ActiveOrdersPage() {
   const router = useRouter();
   const { bookings, updateBooking } = useAppState();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ servings: '', time: '', frequency: 'weekly', method: 'pickup', address: '', notes: '' });
 
   // Filter for confirmed meal prep orders only
   const activeMealPrepOrders = bookings.filter(
@@ -23,6 +25,32 @@ export default function ActiveOrdersPage() {
     updateBooking(bookingId, {
       mealPrepStatus: currentStatus === 'active' ? 'paused' : 'active',
     });
+  };
+
+  const startEditing = (booking: (typeof activeMealPrepOrders)[number]) => {
+    setEditingId(booking.id);
+    setEditDraft({
+      servings: String(booking.guestCount),
+      time: booking.eventTime,
+      frequency: booking.mealPrepFrequency || 'weekly',
+      method: booking.fulfillmentMethod || 'pickup',
+      address: booking.fulfillmentMethod === 'delivery' ? booking.venue : '',
+      notes: booking.specialRequests || '',
+    });
+  };
+
+  const saveChanges = (bookingId: string) => {
+    const servings = Number.parseInt(editDraft.servings, 10);
+    if (!Number.isInteger(servings) || servings < 1) return;
+    updateBooking(bookingId, {
+      guestCount: servings,
+      eventTime: editDraft.time,
+      mealPrepFrequency: editDraft.frequency as 'weekly' | 'biweekly',
+      fulfillmentMethod: editDraft.method as 'pickup' | 'delivery',
+      venue: editDraft.method === 'delivery' ? editDraft.address : 'Pickup at kitchen',
+      specialRequests: editDraft.notes,
+    });
+    setEditingId(null);
   };
 
   const formatDate = (dateStr: string) => {
@@ -147,6 +175,29 @@ export default function ActiveOrdersPage() {
                       </div>
                     </div>
 
+                    {editingId === booking.id && (
+                      <div className="mb-6 grid gap-4 rounded-xl border border-primary/30 bg-background p-4 md:grid-cols-2">
+                        <label className="text-sm font-medium text-card-foreground">Servings
+                          <input type="number" min="1" value={editDraft.servings} onChange={(e) => setEditDraft({ ...editDraft, servings: e.target.value })} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
+                        </label>
+                        <label className="text-sm font-medium text-card-foreground">Fulfillment time
+                          <input type="time" value={editDraft.time} onChange={(e) => setEditDraft({ ...editDraft, time: e.target.value })} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
+                        </label>
+                        <label className="text-sm font-medium text-card-foreground">Frequency
+                          <select value={editDraft.frequency} onChange={(e) => setEditDraft({ ...editDraft, frequency: e.target.value })} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2"><option value="weekly">Weekly</option><option value="biweekly">Every 2 weeks</option></select>
+                        </label>
+                        <label className="text-sm font-medium text-card-foreground">Fulfillment method
+                          <select value={editDraft.method} onChange={(e) => setEditDraft({ ...editDraft, method: e.target.value })} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2"><option value="pickup">Pickup</option><option value="delivery">Delivery</option></select>
+                        </label>
+                        {editDraft.method === 'delivery' && <label className="text-sm font-medium text-card-foreground md:col-span-2">Delivery address
+                          <input value={editDraft.address} onChange={(e) => setEditDraft({ ...editDraft, address: e.target.value })} required className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
+                        </label>}
+                        <label className="text-sm font-medium text-card-foreground md:col-span-2">Special requests
+                          <textarea value={editDraft.notes} onChange={(e) => setEditDraft({ ...editDraft, notes: e.target.value })} rows={3} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
+                        </label>
+                      </div>
+                    )}
+
                     <div className="flex gap-3 pt-6 border-t border-border">
                       <Button
                         variant="outline"
@@ -166,10 +217,17 @@ export default function ActiveOrdersPage() {
                           </>
                         )}
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 gap-2">
-                        <Edit2 className="w-4 h-4" />
-                        Modify
-                      </Button>
+                      {editingId === booking.id ? (
+                        <>
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditingId(null)}>Cancel</Button>
+                          <Button size="sm" className="flex-1" onClick={() => saveChanges(booking.id)}>Save changes</Button>
+                        </>
+                      ) : (
+                        <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => startEditing(booking)}>
+                          <Edit2 className="w-4 h-4" />
+                          Modify
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
