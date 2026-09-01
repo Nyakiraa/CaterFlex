@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation';
 
 export default function ActiveOrdersPage() {
   const router = useRouter();
-  const { bookings, updateBooking } = useAppState();
+  const { bookings, menuItems, updateBooking } = useAppState();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState({ servings: '', time: '', frequency: 'weekly', method: 'pickup', address: '', notes: '' });
+  const [editDraft, setEditDraft] = useState({ servings: '', time: '', frequency: 'weekly', method: 'pickup', address: '', notes: '', dishIds: [] as string[] });
 
   // Filter for confirmed meal prep orders only
   const activeMealPrepOrders = bookings.filter(
@@ -36,6 +36,7 @@ export default function ActiveOrdersPage() {
       method: booking.fulfillmentMethod || 'pickup',
       address: booking.fulfillmentMethod === 'delivery' ? booking.venue : '',
       notes: booking.specialRequests || '',
+      dishIds: booking.selectedMenuItemIds || [],
     });
   };
 
@@ -49,6 +50,7 @@ export default function ActiveOrdersPage() {
       fulfillmentMethod: editDraft.method as 'pickup' | 'delivery',
       venue: editDraft.method === 'delivery' ? editDraft.address : 'Pickup at kitchen',
       specialRequests: editDraft.notes,
+      selectedMenuItemIds: editDraft.dishIds,
     });
     setEditingId(null);
   };
@@ -176,6 +178,18 @@ export default function ActiveOrdersPage() {
                     </div>
 
                     {editingId === booking.id && (
+                      <>
+                        <div className="mb-6 rounded-xl border border-primary/30 bg-background p-4">
+                        <p className="mb-3 text-sm font-medium text-card-foreground">Dishes in this meal plan</p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {menuItems.map((dish) => (
+                            <label key={dish.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card p-3 text-sm text-card-foreground hover:bg-muted/50">
+                              <input type="checkbox" checked={editDraft.dishIds.includes(dish.id)} onChange={(event) => setEditDraft({ ...editDraft, dishIds: event.target.checked ? [...editDraft.dishIds, dish.id] : editDraft.dishIds.filter((id) => id !== dish.id) })} className="size-4 accent-primary" />
+                              <span>{dish.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                       <div className="mb-6 grid gap-4 rounded-xl border border-primary/30 bg-background p-4 md:grid-cols-2">
                         <label className="text-sm font-medium text-card-foreground">Servings
                           <input type="number" min="1" value={editDraft.servings} onChange={(e) => setEditDraft({ ...editDraft, servings: e.target.value })} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
@@ -196,6 +210,7 @@ export default function ActiveOrdersPage() {
                           <textarea value={editDraft.notes} onChange={(e) => setEditDraft({ ...editDraft, notes: e.target.value })} rows={3} className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2" />
                         </label>
                       </div>
+                      </>
                     )}
 
                     <div className="flex gap-3 pt-6 border-t border-border">
