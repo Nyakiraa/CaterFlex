@@ -51,9 +51,12 @@ export interface EventProfile {
 }
 
 // Ingredient Types
+export type IngredientCategory = 'meats' | 'dairy' | 'baking' | 'produce' | 'pantry' | 'herbs_spices' | 'other';
+
 export interface Ingredient {
   id: string;
   name: string;
+  category: IngredientCategory;
   currentStock: number;
   unit: string;
   maxCapacity: number;
@@ -91,6 +94,7 @@ export interface Booking {
   guestCount: number;
   mealPrepFrequency?: MealPrepFrequency;
   fulfillmentMethod?: FulfillmentMethod;
+  mealPrepStatus?: 'active' | 'paused';
   specialRequests: string;
   status: BookingStatus;
   selectedMenuItemIds: string[];

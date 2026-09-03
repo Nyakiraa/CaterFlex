@@ -48,9 +48,14 @@ export default function BookingsPage() {
                       {booking.customerName}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {booking.eventType} • {booking.guestCount} guests •{' '}
+                      {booking.orderType === 'meal_prep' ? 'Meal prep' : booking.eventType} • {booking.guestCount} {booking.orderType === 'meal_prep' ? 'servings' : 'guests'} •{' '}
                       {booking.eventTime}
                     </p>
+                    {booking.orderType === 'meal_prep' && (
+                      <p className="mt-1 text-xs font-medium text-primary">
+                        {booking.mealPrepFrequency === 'biweekly' ? 'Every 2 weeks' : 'Weekly'} · {booking.fulfillmentMethod === 'delivery' ? 'Delivery' : 'Pickup'}
+                      </p>
+                    )}
                   </div>
                   <div className="ml-auto text-right">
                     <p className="text-sm text-muted-foreground">
@@ -96,7 +101,7 @@ export default function BookingsPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
-                        Venue
+                        {booking.orderType === 'meal_prep' ? 'Fulfillment' : 'Venue'}
                       </p>
                       <p className="font-medium text-card-foreground">
                         {booking.venue}

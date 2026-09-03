@@ -25,7 +25,11 @@ export function buildAlerts(state: {
   state.bookings.forEach((booking) => {
     if (!booking.validationPassed && booking.status === 'pending') {
       booking.ruleViolations.forEach((message, i) => {
-        const type = message.includes('meal-prep capacity')
+        const type = message.includes('Allergen conflict')
+          ? 'allergenMismatch'
+          : message.includes('Ingredient shortage')
+            ? 'insufficientStock'
+            : message.includes('meal-prep capacity')
           ? 'capacityConflict'
           : message.includes('capacity')
             ? 'capacityConflict'
@@ -121,10 +125,14 @@ export function buildAlerts(state: {
 export function applyBookingValidation(
   booking: Booking,
   settings: OperatorSettings,
-  existingBookings: Booking[]
+  existingBookings: Booking[],
+  menuItems: MenuItem[] = [],
+  ingredients: Ingredient[] = []
 ): Booking {
   const validation = validateBooking(booking, settings, existingBookings, {
     excludeBookingId: booking.id,
+    menuItems,
+    ingredients,
   });
   return {
     ...booking,

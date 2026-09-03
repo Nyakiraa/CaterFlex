@@ -1,6 +1,6 @@
 'use client';
 
-import { DashboardLayout } from '@/app/dashboard-layout';
+import { CustomerShell } from '@/app/customer/customer-shell';
 import { useAppState } from '@/lib/state';
 import type { AllergenType, FulfillmentMethod, MealPrepFrequency, OrderType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -104,14 +104,14 @@ export default function InquiryPage() {
       });
     }
 
-    router.push('/customer/browse');
+    router.push(isMealPrep ? '/customer/meal-prep-preview' : '/customer/browse');
   };
 
   const inputClass =
     'w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent';
 
   return (
-    <DashboardLayout>
+    <CustomerShell>
       <div className="max-w-3xl mx-auto space-y-8">
         <div>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">
@@ -258,27 +258,6 @@ export default function InquiryPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Macro Profile *
-                  </label>
-                  <select
-                    value={cateringForm.eventProfileId}
-                    onChange={(e) =>
-                      setCateringForm({
-                        ...cateringForm,
-                        eventProfileId: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {eventProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             ) : (
               <div className="space-y-6">
@@ -437,27 +416,6 @@ export default function InquiryPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-card-foreground mb-2">
-                    Macro Profile *
-                  </label>
-                  <select
-                    value={mealPrepForm.eventProfileId}
-                    onChange={(e) =>
-                      setMealPrepForm({
-                        ...mealPrepForm,
-                        eventProfileId: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {eventProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             )}
 
@@ -497,6 +455,6 @@ export default function InquiryPage() {
           </form>
         </Card>
       </div>
-    </DashboardLayout>
+    </CustomerShell>
   );
 }
