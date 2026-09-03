@@ -1,16 +1,10 @@
 'use client';
 
 import { useAppState } from '@/lib/state';
-import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export function TopNav() {
-  const { currentRole, toggleRole, clearCustomerSession } = useAppState();
-
-  const handleRoleSwitch = () => {
-    clearCustomerSession();
-    toggleRole();
-  };
+  const { currentRole } = useAppState();
 
   return (
     <header className="border-b border-border sticky top-0 z-50 shadow-md bg-surface text-surface-foreground">
@@ -23,15 +17,6 @@ export function TopNav() {
             </span>
           </div>
 
-          <Button
-            onClick={handleRoleSwitch}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Switch to {currentRole === 'owner' ? 'Customer' : 'Owner'}
-          </Button>
         </div>
       </div>
     </header>
