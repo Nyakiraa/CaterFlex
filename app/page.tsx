@@ -16,7 +16,7 @@ export default function Page() {
 
   const enterAsCustomer = () => {
     setCurrentRole('customer');
-    router.push('/customer/inquiry');
+    router.push('/login');
   };
 
   return (
