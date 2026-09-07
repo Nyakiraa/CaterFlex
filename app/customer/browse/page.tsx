@@ -78,7 +78,11 @@ export default function BrowsePage() {
     }
   }
 
+<<<<<<< Updated upstream
   // Allergen filtering (Chapter 3, Section 3.2.2 / FR-5.1 - FR-5.3):
+=======
+    // Allergen filtering (Chapter 3, Section 3.2.2 / FR-5.1 - FR-5.3):
+>>>>>>> Stashed changes
   // cross-reference the customer's declared restrictions against the
   // allergy tags of everything currently selected.
   const selectedItems = menuItems.filter((item) =>
@@ -89,10 +93,29 @@ export default function BrowsePage() {
     customerDietaryRestrictions
   );
   const hasSelectionConflicts = conflictingAllergens.length > 0;
+<<<<<<< Updated upstream
 
   const [showAllergenConfirm, setShowAllergenConfirm] = useState(false);
 
   const finalizeSubmit = () => {
+=======
+
+  const handleSubmit = () => {
+    if (selectedMenuItemIds.length === 0) {
+      alert('Please select at least one menu item');
+      return;
+    }
+
+    if (hasSelectionConflicts) {
+      const proceed = window.confirm(
+        `Warning: your selection includes items with declared allergens (${conflictingAllergens
+          .join(', ')
+          .replace(/_/g, ' ')}). Submit anyway?`
+      );
+      if (!proceed) return;
+    }
+
+>>>>>>> Stashed changes
     const guestCount = parseInt(String(customerBookingDraft.guestCount) || '1', 10);
     const totalCost = selectedMenuItemIds.reduce((sum, itemId) => {
       const item = menuItems.find((m) => m.id === itemId);
@@ -403,7 +426,7 @@ export default function BrowsePage() {
                 </>
               )}
 
-              {macroWarnings.length > 0 && (
+{macroWarnings.length > 0 && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-xs font-semibold text-red-700 mb-1">
                     ⚠️ Out of Range:
