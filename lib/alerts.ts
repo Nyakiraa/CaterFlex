@@ -7,6 +7,7 @@ import type {
   Payment,
 } from './types';
 import { validateBooking } from './rules/bookingValidation';
+import { checkAllergenConflict } from './rules/allergenFiltering';
 import {
   checkDishStock,
   getOverPurchasedIngredients,
@@ -48,9 +49,7 @@ export function buildAlerts(state: {
     booking.selectedMenuItemIds.forEach((menuItemId) => {
       const menuItem = state.menuItems.find((m) => m.id === menuItemId);
       if (!menuItem) return;
-      const conflicts = menuItem.allergyTags.filter((tag) =>
-        booking.dietaryRestrictions.includes(tag)
-      );
+      const conflicts = checkAllergenConflict(menuItem, booking.dietaryRestrictions);
       if (conflicts.length > 0) {
         alerts.push({
           id: `alert-${booking.id}-${menuItemId}`,

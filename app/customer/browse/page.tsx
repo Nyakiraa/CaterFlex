@@ -7,6 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
+import {
+  checkAllergenConflict,
+  getUniqueConflictingAllergens,
+} from '@/lib/rules/allergenFiltering';
 
 export default function BrowsePage() {
   const router = useRouter();
@@ -19,6 +23,7 @@ export default function BrowsePage() {
     selectMenuItem,
     deselectMenuItem,
     customerBookingDraft,
+    customerOrderType,
     createBooking,
     clearCustomerSession,
   } = useAppState();
@@ -73,12 +78,21 @@ export default function BrowsePage() {
     }
   }
 
-  const handleSubmit = () => {
-    if (selectedMenuItemIds.length === 0) {
-      alert('Please select at least one menu item');
-      return;
-    }
+  // Allergen filtering (Chapter 3, Section 3.2.2 / FR-5.1 - FR-5.3):
+  // cross-reference the customer's declared restrictions against the
+  // allergy tags of everything currently selected.
+  const selectedItems = menuItems.filter((item) =>
+    selectedMenuItemIds.includes(item.id)
+  );
+  const conflictingAllergens = getUniqueConflictingAllergens(
+    selectedItems,
+    customerDietaryRestrictions
+  );
+  const hasSelectionConflicts = conflictingAllergens.length > 0;
 
+  const [showAllergenConfirm, setShowAllergenConfirm] = useState(false);
+
+  const finalizeSubmit = () => {
     const guestCount = parseInt(String(customerBookingDraft.guestCount) || '1', 10);
     const totalCost = selectedMenuItemIds.reduce((sum, itemId) => {
       const item = menuItems.find((m) => m.id === itemId);
@@ -90,11 +104,14 @@ export default function BrowsePage() {
       customerId: 'customer-temp',
       customerName: 'Customer',
       customerEmail: 'customer@example.com',
+      orderType: customerBookingDraft.orderType ?? customerOrderType,
       eventDate: String(customerBookingDraft.eventDate ?? ''),
       eventTime: String(customerBookingDraft.eventTime ?? '12:00'),
       eventType: String(customerBookingDraft.eventType ?? ''),
       venue: String(customerBookingDraft.venue ?? ''),
       guestCount,
+      mealPrepFrequency: customerBookingDraft.mealPrepFrequency,
+      fulfillmentMethod: customerBookingDraft.fulfillmentMethod,
       specialRequests: String(customerBookingDraft.specialRequests ?? ''),
       selectedMenuItemIds,
       dietaryRestrictions: customerDietaryRestrictions,
@@ -115,6 +132,20 @@ export default function BrowsePage() {
     );
   };
 
+  const handleSubmit = () => {
+    if (selectedMenuItemIds.length === 0) {
+      alert('Please select at least one menu item');
+      return;
+    }
+
+    if (hasSelectionConflicts) {
+      setShowAllergenConfirm(true);
+      return;
+    }
+
+    finalizeSubmit();
+  };
+
   return (
     <DashboardLayout>
       <div className="grid lg:grid-cols-3 gap-8">
@@ -130,9 +161,11 @@ export default function BrowsePage() {
           <div className="grid md:grid-cols-2 gap-6">
             {menuItems.map((item) => {
               const isSelected = selectedMenuItemIds.includes(item.id);
-              const hasAllergyConflict = item.allergyTags.some((tag) =>
-                customerDietaryRestrictions.includes(tag)
+              const itemConflicts = checkAllergenConflict(
+                item,
+                customerDietaryRestrictions
               );
+              const hasAllergyConflict = itemConflicts.length > 0;
 
               return (
                 <Card
@@ -203,7 +236,9 @@ export default function BrowsePage() {
                     <div className="mt-3 p-2 bg-red-50 rounded border border-red-200 flex gap-2">
                       <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-red-700">
-                        Contains restricted allergens
+                        Conflicts with your declared{' '}
+                        {itemConflicts.length === 1 ? 'allergy' : 'allergies'}:{' '}
+                        {itemConflicts.map((tag) => tag.replace('_', ' ')).join(', ')}
                       </p>
                     </div>
                   )}
@@ -378,6 +413,25 @@ export default function BrowsePage() {
                   </p>
                 </div>
               )}
+
+              {hasSelectionConflicts && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-red-700 mb-1">
+                      Allergen Conflict:
+                    </p>
+                    <p className="text-xs text-red-700">
+                      Your selection contains{' '}
+                      {conflictingAllergens
+                        .map((tag) => tag.replace('_', ' '))
+                        .join(', ')}
+                      , which you declared as a restriction. You will be
+                      asked to confirm before submitting.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <Button
@@ -392,6 +446,49 @@ export default function BrowsePage() {
           </Card>
         </div>
       </div>
+
+      {showAllergenConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <Card className="w-full max-w-md p-6 border-2 border-red-200">
+            <div className="flex gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-heading text-lg font-bold text-card-foreground">
+                  Allergen Conflict
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your selection includes items with declared allergens:{' '}
+                  <span className="font-semibold text-red-700">
+                    {conflictingAllergens
+                      .map((tag) => tag.replace('_', ' '))
+                      .join(', ')}
+                  </span>
+                  . Are you sure you want to submit this booking?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAllergenConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  setShowAllergenConfirm(false);
+                  finalizeSubmit();
+                }}
+              >
+                Submit Anyway
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
