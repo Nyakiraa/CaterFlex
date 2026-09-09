@@ -28,7 +28,7 @@ export default function Page() {
             <img src="/logo.png" alt="CaterFlex" className="h-20 w-20 object-contain sm:h-24 sm:w-24" />
             <div className="flex items-center gap-3">
               <Button variant="outline" onClick={() => router.push('/login')} className="border-on-dark/50 bg-card/90 text-card-foreground hover:bg-card">Sign in</Button>
-              <Button onClick={() => router.push('/login')} className="bg-primary text-primary-foreground hover:bg-primary/90">Sign up</Button>
+              <Button onClick={() => router.push('/signup')} className="bg-primary text-primary-foreground hover:bg-primary/90">Sign up</Button>
             </div>
           </header>
           <div className="flex flex-1 items-center py-12 lg:py-20">

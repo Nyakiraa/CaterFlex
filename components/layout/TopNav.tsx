@@ -1,15 +1,18 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useAppState } from '@/lib/state';
+import { signOutAccount } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 
 export function TopNav() {
-  const { currentRole, toggleRole, clearCustomerSession } = useAppState();
+  const router = useRouter();
+  const { currentRole, currentUser } = useAppState();
 
-  const handleRoleSwitch = () => {
-    clearCustomerSession();
-    toggleRole();
+  const handleSignOut = async () => {
+    await signOutAccount();
+    router.push('/login');
   };
 
   return (
@@ -19,18 +22,13 @@ export function TopNav() {
           <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-1">
             <User className="w-4 h-4 text-surface-muted-foreground" />
             <span className="text-sm font-medium capitalize text-surface-foreground">
-              {currentRole}
+              {currentUser?.name || currentRole}
             </span>
           </div>
 
-          <Button
-            onClick={handleRoleSwitch}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
+          <Button onClick={handleSignOut} variant="outline" size="sm" className="gap-2">
             <LogOut className="w-4 h-4" />
-            Switch to {currentRole === 'owner' ? 'Customer' : 'Owner'}
+            Sign out
           </Button>
         </div>
       </div>

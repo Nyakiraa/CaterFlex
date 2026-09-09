@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import {
+  User,
   UserRole,
   Booking,
   MenuItem,
@@ -49,7 +50,9 @@ const initialInvoices = buildInitialInvoices(initialBookings, initialMenuItems);
 
 interface AppState {
   currentRole: UserRole;
+  currentUser: User | null;
   setCurrentRole: (role: UserRole) => void;
+  setCurrentUser: (user: User | null) => void;
 
   bookings: Booking[];
   menuItems: MenuItem[];
@@ -98,6 +101,7 @@ interface AppState {
 
 export const useAppState = create<AppState>((set, get) => ({
   currentRole: 'customer',
+  currentUser: null,
   bookings: initialBookings,
   menuItems: initialMenuItems,
   eventProfiles: mockEventProfiles,
@@ -119,6 +123,7 @@ export const useAppState = create<AppState>((set, get) => ({
   customerOrderType: 'catering',
 
   setCurrentRole: (role) => set({ currentRole: role }),
+  setCurrentUser: (user) => set({ currentUser: user }),
 
   toggleRole: () =>
     set((state) => ({

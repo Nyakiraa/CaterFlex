@@ -8,6 +8,21 @@ export interface User {
   role: UserRole;
 }
 
+export interface CustomerRow {
+  CustomerID: number;
+  Name: string;
+  Contact: string;
+  Email: string;
+  Password: string | null;
+}
+
+export interface BusinessOwnerRow {
+  Email: string;
+  BusinessName: string;
+  OwnerName: string;
+  Contact: string;
+}
+
 // Allergen Types
 export type AllergenType = 'shellfish' | 'peanuts' | 'dairy' | 'gluten' | 'eggs' | 'soy' | 'tree_nuts' | 'other';
 

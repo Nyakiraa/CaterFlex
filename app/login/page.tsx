@@ -3,8 +3,11 @@
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useAppState } from '@/lib/state';
+import { signInAccount } from '@/lib/auth';
 import type { UserRole } from '@/lib/types';
+
+const fieldClass =
+  'h-11 w-full rounded-xl border border-border bg-card px-4 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20';
 
 function LoginForm() {
   const router = useRouter();
@@ -13,9 +16,9 @@ function LoginForm() {
   const [role, setRole] = useState<UserRole>(initialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const setCurrentRole = useAppState((state) => state.setCurrentRole);
+  const [pending, setPending] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get('email') || '').trim();
@@ -24,8 +27,14 @@ function LoginForm() {
       setError('Enter your email and password to continue.');
       return;
     }
+    setPending(true);
     setError('');
-    setCurrentRole(role);
+    const result = await signInAccount({ role, email, password });
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     router.push(role === 'owner' ? '/owner/dashboard' : '/customer/inquiry');
   }
 
@@ -50,16 +59,43 @@ function LoginForm() {
             <div><p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">Welcome back</p><h2 id="login-heading" className="mt-3 text-4xl font-semibold uppercase tracking-tight">Sign in</h2></div>
           </div>
           <div className="mt-6 grid grid-cols-2 rounded-xl bg-muted p-1" role="tablist" aria-label="Account type">
-            {(['owner', 'customer'] as const).map((accountRole) => (<button key={accountRole} type="button" role="tab" aria-selected={role === accountRole} onClick={() => setRole(accountRole)} className={`rounded-lg px-3 py-3 text-sm font-semibold capitalize transition-colors ${role === accountRole ? 'bg-card text-card-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{accountRole}</button>))}
+            {(['owner', 'customer'] as const).map((accountRole) => (
+              <button
+                key={accountRole}
+                type="button"
+                role="tab"
+                aria-selected={role === accountRole}
+                onClick={() => setRole(accountRole)}
+                className={`rounded-lg px-3 py-3 text-sm font-semibold capitalize transition-colors ${role === accountRole ? 'bg-card text-card-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {accountRole}
+              </button>
+            ))}
           </div>
           <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-            <label htmlFor="email" className="flex flex-col gap-2 text-sm font-semibold">Email address<input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className="h-11 w-full rounded-xl border border-border bg-card px-4 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
-            <label htmlFor="password" className="flex flex-col gap-2 text-sm font-semibold">Password<span className="relative"><input id="password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" placeholder="Enter your password" className="h-11 w-full rounded-xl border border-border bg-card px-4 pr-20 font-normal text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" /><button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline">{showPassword ? 'Hide' : 'Show'}</button></span></label>
-            <div className="flex items-center justify-between text-sm"><label className="flex items-center gap-2 text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" /> Remember me</label><button type="button" className="font-semibold text-primary hover:underline">Forgot password?</button></div>
+            <label htmlFor="email" className="flex flex-col gap-2 text-sm font-semibold">
+              Email address
+              <input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" className={fieldClass} />
+            </label>
+            <label htmlFor="password" className="flex flex-col gap-2 text-sm font-semibold">
+              Password
+              <span className="relative">
+                <input id="password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" placeholder="Enter your password" className={`${fieldClass} pr-20`} />
+                <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary hover:underline">
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </span>
+            </label>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="h-11 w-full text-base">Continue as {role}</Button>
+            <Button type="submit" disabled={pending} className="h-11 w-full text-base">
+              {pending ? 'Signing in…' : `Continue as ${role}`}
+            </Button>
           </form>
-          <p className="mt-8 text-center text-sm text-muted-foreground">New to CaterFlex? <button type="button" onClick={() => router.push('/signup')} className="font-semibold text-primary hover:underline">Create an account</button></p>
+          {role === 'customer' && (
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              New to CaterFlex? <button type="button" onClick={() => router.push('/signup')} className="font-semibold text-primary hover:underline">Create a customer account</button>
+            </p>
+          )}
         </section>
       </div>
     </main>
