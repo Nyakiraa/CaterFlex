@@ -25,13 +25,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#F3E8D8] bg-top bg-no-repeat text-foreground"
-      style={{
-        backgroundImage: "url('/customer-bg.png')",
-        backgroundSize: '100% auto',
-      }}
-    >
+    <div className="min-h-screen bg-[#F3E8D8] text-foreground">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-brand text-primary-foreground shadow-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3 lg:px-8">
           <Link href="/customer/inquiry" className="flex items-center" onClick={() => setOpen(false)} aria-label="CaterFlex home">
@@ -85,7 +79,12 @@ export function CustomerShell({ children }: { children: ReactNode }) {
           </nav>
         )}
       </header>
-      <main className="mx-auto max-w-6xl px-5 py-8 lg:px-8 lg:py-12">{children}</main>
+      <main
+        className="min-h-[calc(100vh-81px)] bg-top bg-repeat-y bg-[length:100%_auto] px-5 py-8 lg:px-8 lg:py-12"
+        style={{ backgroundImage: "url('/customer-bg.png')" }}
+      >
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }
