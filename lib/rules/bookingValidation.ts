@@ -1,4 +1,4 @@
-import type { Booking, OperatorSettings } from '../types';
+import type { Booking, Ingredient, MenuItem, OperatorSettings } from '../types';
 import { isMealPrepBooking } from './mealPrep';
 
 export interface BookingRuleFailure {
@@ -7,7 +7,9 @@ export interface BookingRuleFailure {
     | 'dailyCapacity'
     | 'guestCount'
     | 'mealPrepCapacity'
-    | 'servingsLimit';
+    | 'servingsLimit'
+    | 'allergenConflict'
+    | 'ingredientSufficiency';
   message: string;
 }
 
@@ -74,16 +76,26 @@ export function validateBooking(
     | 'id'
     | 'status'
     | 'orderType'
+    | 'selectedMenuItemIds'
+    | 'dietaryRestrictions'
   >,
   settings: OperatorSettings,
   existingBookings: Booking[],
-  options?: { excludeBookingId?: string }
+  options?: { excludeBookingId?: string; menuItems?: MenuItem[]; ingredients?: Ingredient[] }
 ): BookingValidationResult {
   const failures: BookingRuleFailure[] = [];
   const eventDate = new Date(`${booking.eventDate}T12:00:00`);
   const dayOfWeek = eventDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
   if (isMealPrepBooking(booking)) {
+    const selectedItems = (options?.menuItems ?? []).filter((item) => booking.selectedMenuItemIds.includes(item.id));
+    const allergenConflicts = selectedItems.flatMap((item) => item.allergyTags.filter((tag) => booking.dietaryRestrictions.includes(tag)));
+    if (allergenConflicts.length > 0) failures.push({ rule: 'allergenConflict', message: `Allergen conflict detected: ${[...new Set(allergenConflicts)].join(', ')}` });
+    const shortfalls = selectedItems.flatMap((item) => item.requiredIngredients.filter((required) => {
+      const ingredient = options?.ingredients?.find((candidate) => candidate.id === required.id);
+      return !ingredient || ingredient.currentStock < required.qty * Math.max(1, booking.guestCount);
+    }));
+    if (shortfalls.length > 0) failures.push({ rule: 'ingredientSufficiency', message: `Ingredient shortage detected: ${[...new Set(shortfalls.map((item) => item.name))].join(', ')}. Consider a scrap-based alternate.` });
     failures.push(
       ...validateOperatingWindow(booking, settings, 'Fulfillment')
     );

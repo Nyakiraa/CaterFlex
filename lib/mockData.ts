@@ -270,16 +270,16 @@ export const mockEventProfiles: EventProfile[] = [
 
 // Mock Ingredients
 export const mockIngredients: Ingredient[] = [
-  { id: 'ing-1', name: 'Butter', currentStock: 500, unit: 'g', maxCapacity: 1000 },
-  { id: 'ing-2', name: 'Cocoa Powder', currentStock: 200, unit: 'g', maxCapacity: 500 },
-  { id: 'ing-3', name: 'Arborio Rice', currentStock: 800, unit: 'g', maxCapacity: 2000 },
-  { id: 'ing-4', name: 'Eggs', currentStock: 24, unit: 'count', maxCapacity: 60 },
-  { id: 'ing-5', name: 'Chicken Breast', currentStock: 1500, unit: 'g', maxCapacity: 3000 },
-  { id: 'ing-6', name: 'Salmon Fillet', currentStock: 800, unit: 'g', maxCapacity: 2000 },
-  { id: 'ing-7', name: 'Feta Cheese', currentStock: 300, unit: 'g', maxCapacity: 800 },
-  { id: 'ing-8', name: 'Shrimp', currentStock: 200, unit: 'g', maxCapacity: 1000 },
-  { id: 'ing-9', name: 'Peanut Butter', currentStock: 550, unit: 'g', maxCapacity: 500 },
-  { id: 'ing-10', name: 'Beef Tenderloin', currentStock: 600, unit: 'g', maxCapacity: 2000 },
+  { id: 'ing-1', name: 'Butter', category: 'dairy', currentStock: 500, unit: 'g', maxCapacity: 1000 },
+  { id: 'ing-2', name: 'Cocoa Powder', category: 'baking', currentStock: 200, unit: 'g', maxCapacity: 500 },
+  { id: 'ing-3', name: 'Arborio Rice', category: 'pantry', currentStock: 800, unit: 'g', maxCapacity: 2000 },
+  { id: 'ing-4', name: 'Eggs', category: 'baking', currentStock: 24, unit: 'count', maxCapacity: 60 },
+  { id: 'ing-5', name: 'Chicken Breast', category: 'meats', currentStock: 1500, unit: 'g', maxCapacity: 3000 },
+  { id: 'ing-6', name: 'Salmon Fillet', category: 'meats', currentStock: 800, unit: 'g', maxCapacity: 2000 },
+  { id: 'ing-7', name: 'Feta Cheese', category: 'dairy', currentStock: 300, unit: 'g', maxCapacity: 800 },
+  { id: 'ing-8', name: 'Shrimp', category: 'meats', currentStock: 200, unit: 'g', maxCapacity: 1000 },
+  { id: 'ing-9', name: 'Peanut Butter', category: 'pantry', currentStock: 550, unit: 'g', maxCapacity: 500 },
+  { id: 'ing-10', name: 'Beef Tenderloin', category: 'meats', currentStock: 600, unit: 'g', maxCapacity: 2000 },
 ];
 
 // Mock Bookings
@@ -449,6 +449,7 @@ export const mockBookings: Booking[] = [
     guestCount: 8,
     mealPrepFrequency: 'weekly',
     fulfillmentMethod: 'delivery',
+    mealPrepStatus: 'active',
     specialRequests: 'No dairy, high protein portions',
     status: 'confirmed',
     selectedMenuItemIds: ['menu-1', 'menu-4', 'menu-5'],

@@ -3,12 +3,25 @@
 import { DashboardLayout } from '@/app/dashboard-layout';
 import { useAppState } from '@/lib/state';
 import { Card } from '@/components/ui/card';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 export default function CalendarPage() {
   const { bookings } = useAppState();
-  const [currentDate] = useState(new Date(2026, 6)); // July 2026
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 6)); // July 2026
+
+  const goToPreviousMonth = () => {
+    setCurrentDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1));
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+  };
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -46,9 +59,20 @@ export default function CalendarPage() {
         </div>
 
         <Card className="p-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <h2 className="font-heading text-2xl font-bold text-card-foreground">{monthName}</h2>
-            <Calendar className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={goToPreviousMonth} aria-label="View previous month" className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <ChevronLeft className="size-5" />
+              </button>
+              <button type="button" onClick={goToToday} className="rounded-md border border-border px-3 py-2 text-sm font-medium text-card-foreground transition-colors hover:bg-muted">
+                Today
+              </button>
+              <button type="button" onClick={goToNextMonth} aria-label="View next month" className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <ChevronRight className="size-5" />
+              </button>
+              <Calendar className="ml-2 size-6 text-primary" />
+            </div>
           </div>
 
           {/* Day labels */}
@@ -111,7 +135,7 @@ export default function CalendarPage() {
           </h2>
           <div className="space-y-3">
             {bookings
-              .filter((b) => new Date(b.eventDate) >= currentDate)
+              .filter((b) => new Date(b.eventDate) >= new Date())
               .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
               .slice(0, 5)
               .map((booking) => (

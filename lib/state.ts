@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import {
+  User,
   UserRole,
   Booking,
   MenuItem,
@@ -49,7 +50,9 @@ const initialInvoices = buildInitialInvoices(initialBookings, initialMenuItems);
 
 interface AppState {
   currentRole: UserRole;
+  currentUser: User | null;
   setCurrentRole: (role: UserRole) => void;
+  setCurrentUser: (user: User | null) => void;
 
   bookings: Booking[];
   menuItems: MenuItem[];
@@ -98,6 +101,7 @@ interface AppState {
 
 export const useAppState = create<AppState>((set, get) => ({
   currentRole: 'customer',
+  currentUser: null,
   bookings: initialBookings,
   menuItems: initialMenuItems,
   eventProfiles: mockEventProfiles,
@@ -119,6 +123,7 @@ export const useAppState = create<AppState>((set, get) => ({
   customerOrderType: 'catering',
 
   setCurrentRole: (role) => set({ currentRole: role }),
+  setCurrentUser: (user) => set({ currentUser: user }),
 
   toggleRole: () =>
     set((state) => ({
@@ -127,7 +132,7 @@ export const useAppState = create<AppState>((set, get) => ({
 
   createBooking: (booking) => {
     const state = get();
-    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings);
+    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     const bookings = [...state.bookings, validated];
     const next = { ...state, bookings };
     const derived = refreshDerivedState(next);
@@ -139,7 +144,7 @@ export const useAppState = create<AppState>((set, get) => ({
     const bookings = state.bookings.map((b) => {
       if (b.id !== bookingId) return b;
       const merged = { ...b, ...updates };
-      return applyBookingValidation(merged, state.operatorSettings, state.bookings);
+      return applyBookingValidation(merged, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     });
     const next = { ...state, bookings };
     const derived = refreshDerivedState(next);
@@ -151,7 +156,7 @@ export const useAppState = create<AppState>((set, get) => ({
     const booking = state.bookings.find((b) => b.id === bookingId);
     if (!booking || booking.status !== 'pending') return false;
 
-    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings);
+    const validated = applyBookingValidation(booking, state.operatorSettings, state.bookings, state.menuItems, state.ingredients);
     if (!validated.validationPassed) {
       const bookings = state.bookings.map((b) =>
         b.id === bookingId ? validated : b
@@ -203,6 +208,10 @@ export const useAppState = create<AppState>((set, get) => ({
 
   deleteMenuItem: (itemId) =>
     set((state) => {
+      const isReferenced = state.bookings.some((booking) =>
+        booking.selectedMenuItemIds.includes(itemId)
+      );
+      if (isReferenced) return state;
       const next = {
         ...state,
         menuItems: state.menuItems.filter((m) => m.id !== itemId),

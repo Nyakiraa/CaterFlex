@@ -32,6 +32,13 @@ export default function MenuPage() {
   };
 
   const handleDelete = (item: MenuItem) => {
+    const isReferenced = useAppState.getState().bookings.some((booking) =>
+      booking.selectedMenuItemIds.includes(item.id)
+    );
+    if (isReferenced) {
+      window.alert('This menu item is referenced by a booking and cannot be permanently deleted.');
+      return;
+    }
     if (window.confirm(`Delete "${item.name}" from the menu?`)) {
       deleteMenuItem(item.id);
     }
