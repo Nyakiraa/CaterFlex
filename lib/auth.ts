@@ -3,6 +3,7 @@ import { useAppState } from '@/lib/state';
 import type { BusinessOwnerRow, CustomerRow, User, UserRole } from '@/lib/types';
 
 const CUSTOMER_SESSION_KEY = 'caterflex-customer-session';
+const OWNER_SESSION_KEY = 'caterflex-owner-session';
 
 export type AuthSuccess = { ok: true; user: User };
 export type AuthFailure = { ok: false; error: string };
@@ -34,6 +35,7 @@ function appUser(user: User) {
     window.localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify(user));
   } else {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
+    window.localStorage.setItem(OWNER_SESSION_KEY, JSON.stringify(user));
   }
 }
 
@@ -67,12 +69,13 @@ async function findCustomerByCredentials(email: string, password: string) {
   return data as Pick<CustomerRow, 'CustomerID' | 'Name' | 'Contact' | 'Email'> | null;
 }
 
-async function findOwner(email: string) {
-  const { data, error } = await supabase
+async function findOwner(email: string, password?: string) {
+  let query = supabase
     .from('BUSINESS_OWNER')
-    .select('Email, BusinessName, OwnerName, Contact')
-    .eq('Email', email)
-    .maybeSingle();
+    .select('OperatorID, Email, BusinessName, OwnerName, Contact, Password')
+    .eq('Email', email);
+  if (password) query = query.eq('Password', password);
+  const { data, error } = await query.maybeSingle();
   if (error) throw new Error(messageFromError(error, 'Could not load the owner profile.'));
   return data as BusinessOwnerRow | null;
 }
@@ -143,6 +146,22 @@ export async function signInAccount(input: {
     }
   }
 
+  try {
+    const tableOwner = await findOwner(email, input.password);
+    if (tableOwner) {
+      const user: User = {
+        id: String(tableOwner.OperatorID ?? tableOwner.Email),
+        name: tableOwner.OwnerName,
+        email: tableOwner.Email,
+        role: 'owner',
+      };
+      appUser(user);
+      return { ok: true, user };
+    }
+  } catch (profileError) {
+    return { ok: false, error: profileError instanceof Error ? profileError.message : 'Could not load the owner profile.' };
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: input.password,
@@ -178,6 +197,7 @@ export async function signOutAccount() {
   await supabase.auth.signOut();
   if (typeof window !== 'undefined') {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
+    window.localStorage.removeItem(OWNER_SESSION_KEY);
   }
   useAppState.getState().setCurrentUser(null);
   useAppState.getState().setCurrentRole('customer');
@@ -195,6 +215,20 @@ export async function restoreSession() {
   }
 
   if (typeof window === 'undefined') return;
+  const ownerRaw = window.localStorage.getItem(OWNER_SESSION_KEY);
+  if (ownerRaw) {
+    try {
+      const savedOwner = JSON.parse(ownerRaw) as User;
+      const owner = await findOwner(savedOwner.email);
+      if (owner) {
+        appUser({ id: String(owner.OperatorID ?? owner.Email), name: owner.OwnerName, email: owner.Email, role: 'owner' });
+        return;
+      }
+    } catch {
+      window.localStorage.removeItem(OWNER_SESSION_KEY);
+    }
+  }
+
   const raw = window.localStorage.getItem(CUSTOMER_SESSION_KEY);
   if (!raw) {
     useAppState.getState().setCurrentUser(null);
