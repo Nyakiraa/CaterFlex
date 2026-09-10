@@ -237,36 +237,6 @@ export const mockMenuItems: MenuItem[] = [
   },
 ];
 
-// Mock Event Profiles
-export const mockEventProfiles: EventProfile[] = [
-  {
-    id: 'profile-1',
-    name: 'Corporate Buffet',
-    macros: {
-      carbs: { min: 150, max: 250 },
-      protein: { min: 80, max: 120 },
-      fat: { min: 60, max: 100 },
-    },
-  },
-  {
-    id: 'profile-2',
-    name: 'Fitness Event',
-    macros: {
-      carbs: { min: 100, max: 150 },
-      protein: { min: 120, max: 180 },
-      fat: { min: 40, max: 70 },
-    },
-  },
-  {
-    id: 'profile-3',
-    name: 'Health-Conscious Gathering',
-    macros: {
-      carbs: { min: 140, max: 200 },
-      protein: { min: 70, max: 110 },
-      fat: { min: 50, max: 80 },
-    },
-  },
-];
 
 // Mock Ingredients
 export const mockIngredients: Ingredient[] = [

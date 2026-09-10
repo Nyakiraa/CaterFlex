@@ -17,6 +17,7 @@ export interface CustomerRow {
 }
 
 export interface BusinessOwnerRow {
+  OperatorID: number;
   Email: string;
   BusinessName: string;
   OwnerName: string;

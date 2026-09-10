@@ -1,6 +1,6 @@
 'use client';
 
-import { CustomerShell } from '@/app/customer/customer-shell';
+import { DashboardLayout } from '@/app/dashboard-layout';
 import { useAppState } from '@/lib/state';
 import type { AllergenType, FulfillmentMethod, MealPrepFrequency, OrderType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -23,12 +23,10 @@ const ALLERGEN_OPTIONS: AllergenType[] = [
 export default function InquiryPage() {
   const router = useRouter();
   const {
-    eventProfiles,
     customerOrderType,
     setCustomerOrderType,
     setCustomerBookingDraft,
     setDietaryRestrictions,
-    setSelectedEventProfile,
   } = useAppState();
 
   const isMealPrep = customerOrderType === 'meal_prep';
@@ -40,7 +38,6 @@ export default function InquiryPage() {
     venue: '',
     guestCount: '',
     specialRequests: '',
-    eventProfileId: eventProfiles[0]?.id || '',
   });
 
   const [mealPrepForm, setMealPrepForm] = useState({
@@ -52,7 +49,6 @@ export default function InquiryPage() {
     servingsPerCycle: '',
     address: '',
     specialRequests: '',
-    eventProfileId: eventProfiles[0]?.id || '',
   });
 
   const [dietary, setDietary] = useState<AllergenType[]>([]);
@@ -74,7 +70,6 @@ export default function InquiryPage() {
     setDietaryRestrictions(dietary);
 
     if (isMealPrep) {
-      setSelectedEventProfile(mealPrepForm.eventProfileId);
       setCustomerBookingDraft({
         orderType: 'meal_prep',
         eventType: mealPrepForm.planName,
@@ -88,10 +83,8 @@ export default function InquiryPage() {
         mealPrepFrequency: mealPrepForm.frequency,
         fulfillmentMethod: mealPrepForm.fulfillmentMethod,
         specialRequests: mealPrepForm.specialRequests,
-        eventProfileId: mealPrepForm.eventProfileId,
       });
     } else {
-      setSelectedEventProfile(cateringForm.eventProfileId);
       setCustomerBookingDraft({
         orderType: 'catering',
         eventType: cateringForm.eventType,
@@ -100,18 +93,17 @@ export default function InquiryPage() {
         venue: cateringForm.venue,
         guestCount: parseInt(cateringForm.guestCount, 10) || 1,
         specialRequests: cateringForm.specialRequests,
-        eventProfileId: cateringForm.eventProfileId,
       });
     }
 
-    router.push(isMealPrep ? '/customer/meal-prep-preview' : '/customer/browse');
+    router.push('/customer/browse');
   };
 
   const inputClass =
     'w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent';
 
   return (
-    <CustomerShell>
+    <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-8">
         <div>
           <h1 className="font-heading text-3xl font-bold text-surface-foreground">
@@ -453,6 +445,6 @@ export default function InquiryPage() {
           </form>
         </Card>
       </div>
-    </CustomerShell>
+    </DashboardLayout>
   );
 }

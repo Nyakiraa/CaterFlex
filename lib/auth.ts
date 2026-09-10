@@ -70,7 +70,7 @@ async function findCustomerByCredentials(email: string, password: string) {
 async function findOwner(email: string) {
   const { data, error } = await supabase
     .from('BUSINESS_OWNER')
-    .select('Email, BusinessName, OwnerName, Contact')
+    .select('OperatorID, Email, BusinessName, OwnerName, Contact')
     .eq('Email', email)
     .maybeSingle();
   if (error) throw new Error(messageFromError(error, 'Could not load the owner profile.'));
