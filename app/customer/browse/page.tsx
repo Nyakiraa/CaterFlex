@@ -9,6 +9,7 @@ import { Check, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
+
 import {
   checkAllergenConflict,
   getUniqueConflictingAllergens,
@@ -33,6 +34,7 @@ export default function BrowsePage() {
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [showAllergenConfirm, setShowAllergenConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBookingSuccess, setShowBookingSuccess] = useState(false);
 
   /*
    * Load menu items from Supabase.
@@ -178,53 +180,45 @@ export default function BrowsePage() {
     if (isSubmitting) {
       return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     try {
       const guestCount = parseInt(
         String(customerBookingDraft.guestCount || '1'),
         10
       );
-
-      /*
-       * Get the logged-in customer's real database ID.
-       */
+  
+      // Get the logged-in customer's real database ID.
       if (!currentUser?.id) {
         alert(
           'Unable to identify your customer account. Please log in again.'
         );
         return;
       }
-
+  
       const customerId = Number(currentUser.id);
-
+  
       if (Number.isNaN(customerId)) {
         alert('Invalid customer account. Please log in again.');
         return;
       }
-
-      /*
-       * CaterFlex currently has one business/operator.
-       */
+  
+      // CaterFlex currently has one business/operator.
       const operatorId = 2;
-
-      /*
-       * Only use menu IDs that actually exist in Supabase.
-       */
+  
+      // Only use menu IDs that actually exist in Supabase.
       const validMenuItemIds = selectedMenuItemIds.filter((menuItemId) =>
         dbMenuItems.some((item) => item.id === menuItemId)
       );
-
+  
       if (validMenuItemIds.length === 0) {
         alert('Please select at least one valid menu item.');
         return;
       }
-
-      /*
-       * Create BOOKING.
-       */
-      const { data: booking, error: bookingError } = await supabase
+  
+      // Create BOOKING.
+      const { error: bookingError } = await supabase
         .from('BOOKING')
         .insert({
           CustomerID: customerId,
@@ -234,67 +228,18 @@ export default function BrowsePage() {
           Venue: String(customerBookingDraft.venue ?? ''),
           GuestCount: guestCount,
           Status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (bookingError || !booking) {
-        console.error('Booking insert error:', bookingError);
-        alert('Failed to submit your booking. Please try again.');
+        });
+  
+      if (bookingError) {
+        console.error('BOOKING INSERT ERROR:', bookingError);
+        alert(`Booking failed: ${bookingError.message}`);
         return;
       }
-
-      /*
-       * Create BOOKING_ITEM records.
-       *
-       * The frontend uses string IDs.
-       * The database uses numeric MenuItemID values.
-       */
-      const bookingItems = validMenuItemIds.map((menuItemId) => ({
-        BookingID: booking.BookingID,
-        MenuItemID: Number(menuItemId),
-        Quantity: 1,
-      }));
-
-      const { error: bookingItemsError } = await supabase
-        .from('BOOKING_ITEM')
-        .insert(bookingItems);
-
-      if (bookingItemsError) {
-        console.error(
-          'Booking item insert error:',
-          bookingItemsError
-        );
-
-        /*
-         * Remove the booking if its items could not be saved.
-         */
-        await supabase
-          .from('BOOKING')
-          .delete()
-          .eq('BookingID', booking.BookingID);
-
-        alert(
-          'Failed to save the selected menu items. Please try again.'
-        );
-        return;
-      }
-
-      console.log('Booking successfully created:', booking);
-      console.log(
-        'Booking items successfully created:',
-        bookingItems
-      );
-
-      /*
-       * Clear temporary customer booking state.
-       */
+  
+      console.log('BOOKING successfully inserted.');
       clearCustomerSession();
-
-      /*
-       * Return to inquiry page.
-       */
-      router.push('/customer/inquiry');
+      setShowBookingSuccess(true);
+  
     } catch (error) {
       console.error('Unexpected booking error:', error);
       alert('Something went wrong while submitting your booking.');
@@ -584,6 +529,44 @@ export default function BrowsePage() {
           </Card>
         </div>
       )}
+
+      {/* BOOKING SUCCESS MODAL */}
+        {showBookingSuccess && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <Card className="w-full max-w-md p-6 border-2 border-green-200">
+              <div className="flex gap-3 mb-4">
+
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-card-foreground">
+                    Booking Submitted
+                  </h3>
+
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your booking has been successfully submitted.
+                    <br />
+                    <br />
+                    The business owner will review your booking and confirm the
+                    details.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  type="button"
+                  className="bg-green-600 text-white hover:bg-green-700"
+                  onClick={() => {
+                    setShowBookingSuccess(false);
+                    clearCustomerSession();
+                    router.push('/customer/inquiry');
+                  }}
+                >
+                  Continue
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
     </CustomerShell>
   );
 }

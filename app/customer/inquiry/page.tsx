@@ -95,7 +95,26 @@ export default function InquiryPage() {
         specialRequests: cateringForm.specialRequests,
       });
     }
+    console.log('CATERING FORM:', cateringForm);
+console.log('MEAL PREP FORM:', mealPrepForm);
 
+console.log('DATE BEING SAVED:', 
+  isMealPrep ? mealPrepForm.startDate : cateringForm.eventDate
+);
+
+console.log('Booking draft before Browse:', {
+  orderType: isMealPrep ? 'meal_prep' : 'catering',
+  eventDate: isMealPrep ? mealPrepForm.startDate : cateringForm.eventDate,
+  eventTime: isMealPrep ? mealPrepForm.fulfillmentTime : cateringForm.eventTime,
+  venue: isMealPrep
+    ? mealPrepForm.fulfillmentMethod === 'delivery'
+      ? mealPrepForm.address
+      : 'Pickup at kitchen'
+    : cateringForm.venue,
+  guestCount: isMealPrep
+    ? mealPrepForm.servingsPerCycle
+    : cateringForm.guestCount,
+});
     router.push('/customer/browse');
   };
 
