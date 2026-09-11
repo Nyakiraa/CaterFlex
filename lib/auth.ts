@@ -1,14 +1,30 @@
 import { supabase } from '@/lib/supabase';
 import { useAppState } from '@/lib/state';
-import type { BusinessOwnerRow, CustomerRow, User, UserRole } from '@/lib/types';
+import type {
+  BusinessOwnerRow,
+  CustomerRow,
+  User,
+  UserRole,
+} from '@/lib/types';
 
 const CUSTOMER_SESSION_KEY = 'caterflex-customer-session';
 
-export type AuthSuccess = { ok: true; user: User };
-export type AuthFailure = { ok: false; error: string };
+export type AuthSuccess = {
+  ok: true;
+  user: User;
+};
+
+export type AuthFailure = {
+  ok: false;
+  error: string;
+};
+
 export type AuthResult = AuthSuccess | AuthFailure;
 
-function messageFromError(error: { message?: string; code?: string } | null, fallback: string) {
+function messageFromError(
+  error: { message?: string; code?: string } | null,
+  fallback: string
+) {
   const code = error?.code || '';
   const message = error?.message?.trim() || '';
   const lower = message.toLowerCase();
@@ -16,10 +32,15 @@ function messageFromError(error: { message?: string; code?: string } | null, fal
   if (code === '42501' || lower.includes('row-level security')) {
     return 'Supabase is blocking this table. In the SQL Editor, allow insert and select on CUSTOMER for the anon role.';
   }
+
   if (code === '23505' || lower.includes('duplicate')) {
     return 'This email already has a customer profile. Sign in instead.';
   }
-  if (code === 'invalid_credentials') {
+
+  if (
+    code === 'invalid_credentials' ||
+    lower.includes('invalid login credentials')
+  ) {
     return 'Invalid email or password.';
   }
 
@@ -29,15 +50,22 @@ function messageFromError(error: { message?: string; code?: string } | null, fal
 function appUser(user: User) {
   useAppState.getState().setCurrentRole(user.role);
   useAppState.getState().setCurrentUser(user);
+
   if (typeof window === 'undefined') return;
+
   if (user.role === 'customer') {
-    window.localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify(user));
+    window.localStorage.setItem(
+      CUSTOMER_SESSION_KEY,
+      JSON.stringify(user)
+    );
   } else {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
   }
 }
 
-function customerFromRow(row: Pick<CustomerRow, 'CustomerID' | 'Name' | 'Email'>): User {
+function customerFromRow(
+  row: Pick<CustomerRow, 'CustomerID' | 'Name' | 'Email'>
+): User {
   return {
     id: String(row.CustomerID),
     name: row.Name,
@@ -52,19 +80,40 @@ async function findCustomerByEmail(email: string) {
     .select('CustomerID, Name, Contact, Email')
     .eq('Email', email)
     .maybeSingle();
-  if (error) throw new Error(messageFromError(error, 'Could not load the customer profile.'));
-  return data as Pick<CustomerRow, 'CustomerID' | 'Name' | 'Contact' | 'Email'> | null;
+
+  if (error) {
+    throw new Error(
+      messageFromError(error, 'Could not load the customer profile.')
+    );
+  }
+
+  return data as Pick<
+    CustomerRow,
+    'CustomerID' | 'Name' | 'Contact' | 'Email'
+  > | null;
 }
 
-async function findCustomerByCredentials(email: string, password: string) {
+async function findCustomerByCredentials(
+  email: string,
+  password: string
+) {
   const { data, error } = await supabase
     .from('CUSTOMER')
     .select('CustomerID, Name, Contact, Email')
     .eq('Email', email)
     .eq('Password', password)
     .maybeSingle();
-  if (error) throw new Error(messageFromError(error, 'Could not load the customer profile.'));
-  return data as Pick<CustomerRow, 'CustomerID' | 'Name' | 'Contact' | 'Email'> | null;
+
+  if (error) {
+    throw new Error(
+      messageFromError(error, 'Could not load the customer profile.')
+    );
+  }
+
+  return data as Pick<
+    CustomerRow,
+    'CustomerID' | 'Name' | 'Contact' | 'Email'
+  > | null;
 }
 
 async function findOwner(email: string) {
@@ -73,7 +122,13 @@ async function findOwner(email: string) {
     .select('OperatorID, Email, BusinessName, OwnerName, Contact')
     .eq('Email', email)
     .maybeSingle();
-  if (error) throw new Error(messageFromError(error, 'Could not load the owner profile.'));
+
+  if (error) {
+    throw new Error(
+      messageFromError(error, 'Could not load the owner profile.')
+    );
+  }
+
   return data as BusinessOwnerRow | null;
 }
 
@@ -89,8 +144,12 @@ export async function signUpAccount(input: {
 
   try {
     const existing = await findCustomerByEmail(email);
+
     if (existing) {
-      return { ok: false, error: 'This email already has a customer profile. Sign in instead.' };
+      return {
+        ok: false,
+        error: 'This email already has a customer profile. Sign in instead.',
+      };
     }
 
     const { data, error } = await supabase
@@ -105,16 +164,32 @@ export async function signUpAccount(input: {
       .single();
 
     if (error) {
-      return { ok: false, error: messageFromError(error, 'Could not create the customer profile.') };
+      return {
+        ok: false,
+        error: messageFromError(
+          error,
+          'Could not create the customer profile.'
+        ),
+      };
     }
 
-    const user = customerFromRow(data as Pick<CustomerRow, 'CustomerID' | 'Name' | 'Email'>);
+    const user = customerFromRow(
+      data as Pick<CustomerRow, 'CustomerID' | 'Name' | 'Email'>
+    );
+
     appUser(user);
-    return { ok: true, user };
+
+    return {
+      ok: true,
+      user,
+    };
   } catch (profileError) {
     return {
       ok: false,
-      error: profileError instanceof Error ? profileError.message : 'Could not create the customer profile.',
+      error:
+        profileError instanceof Error
+          ? profileError.message
+          : 'Could not create the customer profile.',
     };
   }
 }
@@ -126,76 +201,173 @@ export async function signInAccount(input: {
 }): Promise<AuthResult> {
   const email = input.email.trim();
 
+  // ============================================================
+  // CUSTOMER LOGIN
+  // ============================================================
+  // Customers continue using the existing CUSTOMER table login.
+  // We are NOT changing customer authentication to Supabase Auth.
+  // ============================================================
+
   if (input.role === 'customer') {
     try {
-      const customer = await findCustomerByCredentials(email, input.password);
+      const customer = await findCustomerByCredentials(
+        email,
+        input.password
+      );
+
       if (!customer) {
-        return { ok: false, error: 'Invalid email or password.' };
+        return {
+          ok: false,
+          error: 'Invalid email or password.',
+        };
       }
+
       const user = customerFromRow(customer);
+
       appUser(user);
-      return { ok: true, user };
+
+      return {
+        ok: true,
+        user,
+      };
     } catch (profileError) {
       return {
         ok: false,
-        error: profileError instanceof Error ? profileError.message : 'Could not load your profile.',
+        error:
+          profileError instanceof Error
+            ? profileError.message
+            : 'Could not load your profile.',
       };
     }
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password: input.password,
-  });
-
-  if (error) return { ok: false, error: messageFromError(error, 'Invalid email or password.') };
-  if (!data.user) return { ok: false, error: 'Invalid email or password.' };
+  // ============================================================
+  // OWNER LOGIN
+  // ============================================================
+  // Owner authentication MUST use Supabase Auth.
+  // BUSINESS_OWNER only stores the owner's profile information.
+  // ============================================================
 
   try {
+    // First make sure there isn't an old/stale session.
+    await supabase.auth.signOut();
+
+    const {
+      data: authData,
+      error: authError,
+    } = await supabase.auth.signInWithPassword({
+      email,
+      password: input.password,
+    });
+
+    if (authError) {
+      return {
+        ok: false,
+        error: messageFromError(
+          authError,
+          'Invalid owner email or password.'
+        ),
+      };
+    }
+
+    // A real owner login must have BOTH a user and a session.
+    if (!authData.user || !authData.session) {
+      await supabase.auth.signOut();
+
+      return {
+        ok: false,
+        error:
+          'Owner authentication succeeded, but no Supabase session was created.',
+      };
+    }
+
+    // Confirm that this authenticated email has a
+    // corresponding BUSINESS_OWNER profile.
     const owner = await findOwner(email);
+
     if (!owner) {
       await supabase.auth.signOut();
-      return { ok: false, error: 'No owner profile exists for this email.' };
+
+      return {
+        ok: false,
+        error: 'No owner profile exists for this email.',
+      };
     }
+
     const user: User = {
-      id: data.user.id,
+      id: authData.user.id,
       name: owner.OwnerName,
       email: owner.Email,
       role: 'owner',
     };
+
     appUser(user);
-    return { ok: true, user };
-  } catch (profileError) {
+
+    return {
+      ok: true,
+      user,
+    };
+  } catch (error) {
     await supabase.auth.signOut();
+
     return {
       ok: false,
-      error: profileError instanceof Error ? profileError.message : 'Could not load your profile.',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Could not authenticate the owner.',
     };
   }
 }
 
 export async function signOutAccount() {
   await supabase.auth.signOut();
+
   if (typeof window !== 'undefined') {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
   }
+
   useAppState.getState().setCurrentUser(null);
   useAppState.getState().setCurrentRole('customer');
   useAppState.getState().clearCustomerSession();
 }
 
 export async function restoreSession() {
-  const { data } = await supabase.auth.getUser();
-  if (data.user?.email) {
-    const owner = await findOwner(data.user.email).catch(() => null);
+  // ============================================================
+  // RESTORE OWNER SESSION
+  // ============================================================
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user?.email) {
+    const owner = await findOwner(session.user.email).catch(
+      () => null
+    );
+
     if (owner) {
-      appUser({ id: data.user.id, name: owner.OwnerName, email: owner.Email, role: 'owner' });
+      appUser({
+        id: session.user.id,
+        name: owner.OwnerName,
+        email: owner.Email,
+        role: 'owner',
+      });
+
       return;
     }
   }
 
+  // ============================================================
+  // RESTORE CUSTOMER SESSION
+  // ============================================================
+
   if (typeof window === 'undefined') return;
-  const raw = window.localStorage.getItem(CUSTOMER_SESSION_KEY);
+
+  const raw = window.localStorage.getItem(
+    CUSTOMER_SESSION_KEY
+  );
+
   if (!raw) {
     useAppState.getState().setCurrentUser(null);
     return;
@@ -203,12 +375,15 @@ export async function restoreSession() {
 
   try {
     const saved = JSON.parse(raw) as User;
+
     const customer = await findCustomerByEmail(saved.email);
+
     if (!customer) {
       window.localStorage.removeItem(CUSTOMER_SESSION_KEY);
       useAppState.getState().setCurrentUser(null);
       return;
     }
+
     appUser(customerFromRow(customer));
   } catch {
     window.localStorage.removeItem(CUSTOMER_SESSION_KEY);

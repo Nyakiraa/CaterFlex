@@ -1,98 +1,345 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import { CustomerShell } from '@/app/customer/customer-shell';
 import { useAppState } from '@/lib/state';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle2, Clock3, XCircle, Send } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-const statusCopy = {
-  pending: { label: 'Pending review', icon: Clock3, tone: 'secondary' as const },
-  confirmed: { label: 'Confirmed', icon: CheckCircle2, tone: 'default' as const },
-  rejected: { label: 'Rejected', icon: XCircle, tone: 'destructive' as const },
-  completed: { label: 'Completed', icon: CheckCircle2, tone: 'default' as const },
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+import { Badge } from '@/components/ui/badge';
+
+import {
+  CheckCircle2,
+  Clock3,
+  XCircle,
+} from 'lucide-react';
+
+type Booking = {
+  BookingID: number;
+  CustomerID: number;
+  OperatorID: number | null;
+  EventDate: string;
+  EventTime: string;
+  Venue: string | null;
+  GuestCount: number;
+  Status: string | null;
+};
+
+type BookingItem = {
+  BookingItemID: number;
+  BookingID: number;
+  MenuItemID: number;
+  Quantity: number;
+};
+
+type MenuItem = {
+  MenuItemID: number;
+  ItemName: string;
+  Price: number | null;
+};
+
+type BookingWithItems = Booking & {
+  items: {
+    name: string;
+    quantity: number;
+    price: number;
+  }[];
+};
+
+const statusCopy: Record<
+  string,
+  {
+    label: string;
+    icon: typeof Clock3;
+    tone: 'secondary' | 'default' | 'destructive';
+  }
+> = {
+  pending: {
+    label: 'Pending review',
+    icon: Clock3,
+    tone: 'secondary',
+  },
+
+  confirmed: {
+    label: 'Confirmed',
+    icon: CheckCircle2,
+    tone: 'default',
+  },
+
+  rejected: {
+    label: 'Rejected',
+    icon: XCircle,
+    tone: 'destructive',
+  },
+
+  completed: {
+    label: 'Completed',
+    icon: CheckCircle2,
+    tone: 'default',
+  },
 };
 
 export default function CustomerStatusPage() {
-  const { bookings, menuItems, updateBooking } = useAppState();
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [sentId, setSentId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'bookings' | 'meal_prep'>('bookings');
+  const { currentUser } = useAppState();
 
-  const visibleBookings = bookings.filter((booking) =>
-    activeSection === 'meal_prep' ? booking.orderType === 'meal_prep' : booking.orderType !== 'meal_prep'
-  );
+  const [bookings, setBookings] = useState<BookingWithItems[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const submitChangeRequest = (bookingId: string) => {
-    const request = drafts[bookingId]?.trim();
-    if (!request) return;
-    const booking = bookings.find((item) => item.id === bookingId);
-    if (!booking) return;
-    const prefix = booking.specialRequests ? `${booking.specialRequests}\n\n` : '';
-    updateBooking(bookingId, { specialRequests: `${prefix}Change request: ${request}` });
-    setDrafts((current) => ({ ...current, [bookingId]: '' }));
-    setSentId(bookingId);
-  };
+  useEffect(() => {
+    const loadBookings = async () => {
+      if (!currentUser?.id) {
+        setLoading(false);
+        return;
+      }
+
+      const customerId = Number(currentUser.id);
+
+      if (Number.isNaN(customerId)) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get this customer's bookings
+        const { data: bookingData, error: bookingError } =
+          await supabase
+            .from('BOOKING')
+            .select(
+              'BookingID, CustomerID, OperatorID, EventDate, EventTime, Venue, GuestCount, Status'
+            )
+            .eq('CustomerID', customerId)
+            .order('BookingID', { ascending: false });
+
+        if (bookingError) {
+          console.error('BOOKING FETCH ERROR:', bookingError);
+          setBookings([]);
+          return;
+        }
+
+        if (!bookingData || bookingData.length === 0) {
+          setBookings([]);
+          return;
+        }
+
+        const bookingIds = bookingData.map(
+          (booking) => booking.BookingID
+        );
+
+        // Get menu items selected for these bookings
+        const { data: bookingItemData, error: bookingItemError } =
+          await supabase
+            .from('BOOKING_ITEM')
+            .select(
+              'BookingItemID, BookingID, MenuItemID, Quantity'
+            )
+            .in('BookingID', bookingIds);
+
+        if (bookingItemError) {
+          console.error(
+            'BOOKING_ITEM FETCH ERROR:',
+            bookingItemError
+          );
+          setBookings([]);
+          return;
+        }
+
+        const menuItemIds = Array.from(
+          new Set(
+            (bookingItemData ?? []).map(
+              (item) => item.MenuItemID
+            )
+          )
+        );
+
+        let menuItems: MenuItem[] = [];
+
+        if (menuItemIds.length > 0) {
+          const { data: menuItemData, error: menuItemError } =
+            await supabase
+              .from('MENU_ITEM')
+              .select('MenuItemID, ItemName, Price')
+              .in('MenuItemID', menuItemIds);
+
+          if (menuItemError) {
+            console.error(
+              'MENU_ITEM FETCH ERROR:',
+              menuItemError
+            );
+          } else {
+            menuItems = menuItemData ?? [];
+          }
+        }
+
+        // Combine bookings + booking items + menu items
+        const combinedBookings: BookingWithItems[] =
+          bookingData.map((booking) => {
+            const itemsForBooking =
+              (bookingItemData ?? []).filter(
+                (item) => item.BookingID === booking.BookingID
+              );
+
+            const items = itemsForBooking.map((bookingItem) => {
+              const menuItem = menuItems.find(
+                (item) =>
+                  item.MenuItemID === bookingItem.MenuItemID
+              );
+
+              return {
+                name:
+                  menuItem?.ItemName ??
+                  `Menu Item #${bookingItem.MenuItemID}`,
+                quantity: bookingItem.Quantity,
+                price: Number(menuItem?.Price ?? 0),
+              };
+            });
+
+            return {
+              ...booking,
+              items,
+            };
+          });
+
+        setBookings(combinedBookings);
+      } catch (error) {
+        console.error('Unexpected booking fetch error:', error);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBookings();
+  }, [currentUser?.id]);
 
   return (
     <CustomerShell>
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <header>
-          <h1 className="font-heading text-3xl font-bold text-surface-foreground">My bookings</h1>
-          <p className="mt-2 text-surface-muted-foreground">Track inquiries, confirmations, and request updates.</p>
+          <h1 className="font-heading text-3xl font-bold text-surface-foreground">
+            My bookings
+          </h1>
+
+          <p className="mt-2 text-surface-muted-foreground">
+            Track your submitted bookings and their current status.
+          </p>
         </header>
 
-        <div className="border-b border-border">
-          <div className="flex gap-8" role="tablist" aria-label="My requests">
-            <button type="button" role="tab" aria-selected={activeSection === 'bookings'} onClick={() => setActiveSection('bookings')} className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${activeSection === 'bookings' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-              Booking requests <span className="ml-1">({bookings.filter((booking) => booking.orderType !== 'meal_prep').length})</span>
-            </button>
-            <button type="button" role="tab" aria-selected={activeSection === 'meal_prep'} onClick={() => setActiveSection('meal_prep')} className={`border-b-2 px-1 py-3 text-sm font-medium transition-colors ${activeSection === 'meal_prep' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-              Meal prep requests <span className="ml-1">({bookings.filter((booking) => booking.orderType === 'meal_prep').length})</span>
-            </button>
-          </div>
-        </div>
+        {loading ? (
+          <Card>
+            <CardContent className="p-12 text-center text-muted-foreground">
+              Loading your bookings...
+            </CardContent>
+          </Card>
+        ) : bookings.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center text-muted-foreground">
+              No bookings yet. Start a new inquiry to see it here.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-5">
+            {bookings.map((booking) => {
+              const statusKey =
+                booking.Status?.toLowerCase() ?? 'pending';
 
-        {visibleBookings.length === 0 ? (
-          <Card><CardContent className="p-12 text-center text-muted-foreground">No {activeSection === 'meal_prep' ? 'meal prep' : 'booking'} requests yet. Start a new inquiry to see it here.</CardContent></Card>
-        ) : visibleBookings.map((booking) => {
-          const status = statusCopy[booking.status];
-          const StatusIcon = status.icon;
-          return (
-            <Card key={booking.id}>
-              <CardHeader className="flex-row items-start justify-between gap-4">
-                <div>
-                  <CardTitle>{booking.eventType || 'Catering request'}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">{new Date(booking.eventDate).toLocaleDateString()} · {booking.guestCount} guests · {booking.venue}</p>
-                </div>
-                <Badge variant={status.tone}><StatusIcon data-icon="inline-start" />{status.label}</Badge>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-5">
-                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  {booking.selectedMenuItemIds.map((id) => menuItems.find((item) => item.id === id)?.name).filter(Boolean).map((name) => <Badge key={name} variant="outline">{name}</Badge>)}
-                </div>
-                <div className="flex items-center justify-between border-t pt-4 text-sm">
-                  <span className="text-muted-foreground">Estimated total</span>
-                  <span className="font-semibold text-foreground">${booking.totalCost.toLocaleString()}</span>
-                </div>
-                {booking.status !== 'rejected' && (
-                  <div className="flex flex-col gap-3">
-                    <label htmlFor={`change-${booking.id}`} className="text-sm font-medium">Request a change</label>
-                    <Textarea id={`change-${booking.id}`} value={drafts[booking.id] ?? ''} onChange={(event) => setDrafts((current) => ({ ...current, [booking.id]: event.target.value }))} placeholder="Tell the owner what you would like to update..." rows={3} />
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm text-muted-foreground">The owner will review your request before changing the booking.</p>
-                      <Button onClick={() => submitChangeRequest(booking.id)} disabled={!drafts[booking.id]?.trim()}><Send data-icon="inline-start" />Send request</Button>
+              const status =
+                statusCopy[statusKey] ?? statusCopy.pending;
+
+              const StatusIcon = status.icon;
+
+              const estimatedTotal = booking.items.reduce(
+                (total, item) =>
+                  total + item.price * item.quantity,
+                0
+              );
+
+              return (
+                <Card key={booking.BookingID}>
+                  <CardHeader className="flex-row items-start justify-between gap-4">
+                    <div>
+                      <CardTitle>
+                        Catering Order #{booking.BookingID}
+                      </CardTitle>
+
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {new Date(
+                          `${booking.EventDate}T00:00:00`
+                        ).toLocaleDateString()}{' '}
+                        · {booking.GuestCount} guests
+                      </p>
+
+                      {booking.Venue && (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {booking.Venue}
+                        </p>
+                      )}
+
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Event time: {booking.EventTime}
+                      </p>
                     </div>
-                    {sentId === booking.id && <p className="text-sm text-primary" role="status">Change request sent to the owner.</p>}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+
+                    <Badge variant={status.tone}>
+                      <StatusIcon data-icon="inline-start" />
+                      {status.label}
+                    </Badge>
+                  </CardHeader>
+
+                  <CardContent className="flex flex-col gap-5">
+                    <div>
+                      <p className="mb-2 text-sm font-medium text-foreground">
+                        Selected menu items
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {booking.items.length === 0 ? (
+                          <span className="text-sm text-muted-foreground">
+                            No menu items recorded.
+                          </span>
+                        ) : (
+                          booking.items.map((item) => (
+                            <Badge
+                              key={`${booking.BookingID}-${item.name}`}
+                              variant="outline"
+                            >
+                              {item.name}
+                              {item.quantity > 1 &&
+                                ` × ${item.quantity}`}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t pt-4 text-sm">
+                      <span className="text-muted-foreground">
+                        Estimated total
+                      </span>
+
+                      <span className="font-semibold text-foreground">
+                        ₱
+                        {estimatedTotal.toLocaleString(
+                          'en-PH',
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </CustomerShell>
   );
